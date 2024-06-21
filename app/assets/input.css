@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+  display: none !important;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    @apply transition-colors duration-75;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  @layer base {
+    :root {
+      --background: 0 100% 95%;
+      --foreground: 234 89% 11%;
+      --card: 0 100% 95%;
+      --card-foreground: 234 89% 11%;
+      --popover: 0 100% 95%;
+      --popover-foreground: 234 89% 11%;
+      --primary: 234 89% 11%;
+      --primary-foreground: 0 100% 95%;
+      --secondary: 249 63% 41%;
+      --secondary-foreground: 234 89% 11%;
+      --border: 249 63% 41%;
+      --input: 249 63% 41%;
+      --ring: 249 63% 41%;
+      --radius: 0.5rem;
+    }
+
+    .dark {
+      --background: 234 89% 11%; /* Dark background color */
+      --foreground: 0 100% 95%; /* Dark foreground color */
+      --card: 234 89% 11%; /* Dark card background color */
+      --card-foreground: 0 100% 95%; /* Dark card foreground color */
+      --popover: 234 89% 11%; /* Dark popover background color */
+      --popover-foreground: 0 100% 95%; /* Dark popover foreground color */
+      --primary: 0 100% 95%; /* Light primary color */
+      --primary-foreground: 234 89% 11%; /* Dark primary foreground color */
+      --secondary: 249 63% 41%; /* Light secondary color */
+      --secondary-foreground: 0 100% 95%; /* Dark secondary foreground color */
+      --border: 249 63% 41%; /* Light border color */
+      --input: 249 63% 41%; /* Light input color */
+      --ring: 249 63% 41%; /* Light ring color */
+      --radius: 0.5rem;
+    }
+  }
+}

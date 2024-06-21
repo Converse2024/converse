@@ -1,0 +1,20 @@
+package pages
+
+import "github.com/Sourjaya/converse/app/templates/layouts"
+
+templ Login() {
+	@layouts.App() {
+		// <div class="fixed top-6 right-6">
+		// 	@components.ThemeSwitcher()
+		// </div>
+		<div class="w-full justify-center gap-10">
+			<div class="mt-10 lg:mt-40">
+				<div class="max-w-sm  mx-auto sm:border sm:rounded-md sm:shadow-sm py-12 px-8 flex flex-col gap-8">
+					<h2 class="text-center text-2xl font-medium">Login</h2>
+					//@LoginForm(data.FormValues, data.FormErrors)
+					<a class="text-sm underline" href="/signup">Don't have an account? Signup here.</a>
+				</div>
+			</div>
+		</div>
+	}
+}

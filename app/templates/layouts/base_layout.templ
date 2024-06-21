@@ -1,0 +1,27 @@
+package layouts
+
+var (
+	title = "Converse"
+)
+
+templ Base() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<link rel="icon" type="image/x-icon" href="./../../../public/assets/favicon_dark/favicon.ico"/>
+			<link rel="stylesheet" href="./../../../public/assets/output.css"/>
+			<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.9" defer></script>
+			<script src="https://unpkg.com/htmx.org/dist/ext/ws.js" defer></script>
+			<script src="https://unpkg.com/htmx.org/dist/ext/multi-swap.js" defer></script>
+			<title>{ title }</title>
+		</head>
+		<body hx-ext="multi-swap" x-data="{theme: $persist('dark').using(sessionStorage)}" :class="theme" lang="en" class="h-screen w-screen">
+			{ children... }
+		</body>
+	</html>
+}
