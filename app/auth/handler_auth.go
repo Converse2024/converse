@@ -34,6 +34,12 @@ var signupSchema = v.Schema{
 
 var values pages.RegisterFormValues
 
+func NotFoundHandler(c echo.Context) error {
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
+	components := errorComponent.Error404()
+	return components.Render(c.Request().Context(), c.Response().Writer)
+}
+
 func handleGet(c echo.Context) error {
 
 	t := c.QueryParam("check")

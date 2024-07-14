@@ -1,8 +1,19 @@
 package errorComponent
 
+import "github.com/Sourjaya/converse/app/templates/layouts"
+
 templ Error500Component() {
 	<div class="slide-transition flex flex-col justify-center items-center gap-4">
 		<div class="text-muted-foreground text-5xl font-bold">500</div>
 		<div class="text-lg">An unexpected error occured</div>
 	</div>
+}
+
+templ Error500() {
+	@layouts.Base() {
+		<div class="h-screen w-full flex flex-col justify-center align-middle items-center gap-4">
+			<div class="text-muted-foreground text-5xl font-bold">500</div>
+			<div class="text-lg">An unexpected error occured</div>
+		</div>
+	}
 }

@@ -66,6 +66,13 @@ func main() {
 	// App
 	app := echo.New()
 	InitializeMiddleware(app)
+	app.HTTPErrorHandler = func(err error, c echo.Context) {
+		if he, ok := err.(*echo.HTTPError); ok && he.Code == http.StatusNotFound {
+			auth.NotFoundHandler(c)
+		} else {
+			app.DefaultHTTPErrorHandler(err, c)
+		}
+	}
 
 	hosts[fmt.Sprintf("app.localhost:%s", sc.ListenAddr)] = &Host{app}
 
@@ -76,6 +83,13 @@ func main() {
 	// Landing site
 	site := echo.New()
 	InitializeMiddleware(site)
+	site.HTTPErrorHandler = func(err error, c echo.Context) {
+		if he, ok := err.(*echo.HTTPError); ok && he.Code == http.StatusNotFound {
+			auth.NotFoundHandler(c)
+		} else {
+			site.DefaultHTTPErrorHandler(err, c)
+		}
+	}
 	hosts[fmt.Sprintf("localhost:%s", sc.ListenAddr)] = &Host{site}
 
 	site.GET("/", func(c echo.Context) error {
@@ -85,19 +99,19 @@ func main() {
 	})
 
 	// Server
+
 	e := echo.New()
 	InitializeMiddleware(e)
 	e.Any("/*", func(c echo.Context) (err error) {
 		req := c.Request()
 		res := c.Response()
 		host := hosts[req.Host]
-
-		if host == nil {
-			err = echo.ErrNotFound
-		} else {
+		// fmt.Println("\n", status)
+		if host != nil {
 			host.Echo.ServeHTTP(res, req)
+		} else {
+			auth.NotFoundHandler(c)
 		}
-
 		return
 	})
 
