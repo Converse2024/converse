@@ -14,7 +14,7 @@ import (
 	"github.com/Sourjaya/converse/app/templates/layouts"
 )
 
-func Index() templ.Component {
+func Index(loginURL string) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -33,7 +33,16 @@ func Index() templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"text-center flex flex-col justify-center items-center mt-10 lg:mt-32\"><div class=\"flex flex-col gap-12\"><h1 class=\"inline-block text-transparent bg-clip-text max-w-2xl mx-auto text-5xl lg:text-7xl font-bold uppercase bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500\">converse</h1><div class=\"flex flex-col gap-3\"><h1 class=\"max-w-2xl mx-auto text-2xl lg:text-4xl font-bold lg:leading-tight\">Crafting Conversations that Inspire, Connect, and Transform.</h1><h2 class=\"text-lg text-muted-foreground\">Your Words, Your World.</h2></div><div hx-replace-url=\"true\" class=\"flex justify-center\"><a hx-get=\"/login\" hx-trigger=\"click\" hx-swap=\"outerHTML\" hx-target=\"#app\" class=\"bg-primary w-fit rounded-md px-4 py-2 text-primary-foreground font-medium text-sm cursor-pointer\">Try Now</a></div></div></div>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"text-center flex flex-col justify-center items-center mt-10 lg:mt-32\"><div class=\"flex flex-col gap-12\"><h1 class=\"inline-block text-transparent bg-clip-text max-w-2xl mx-auto text-5xl lg:text-7xl font-bold uppercase bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500\">converse</h1><div class=\"flex flex-col gap-3\"><h1 class=\"max-w-2xl mx-auto text-2xl lg:text-4xl font-bold lg:leading-tight\">Crafting Conversations that Inspire, Connect, and Transform.</h1><h2 class=\"text-lg text-muted-foreground\">Your Words, Your World.</h2></div><div hx-replace-url=\"true\" class=\"flex justify-center\"><a href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 templ.SafeURL = templ.SafeURL(loginURL)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var3)))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" class=\"bg-primary w-fit rounded-md px-4 py-2 text-primary-foreground font-medium text-sm cursor-pointer\">Try Now</a></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -42,7 +51,7 @@ func Index() templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = layouts.App().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.AppWithNavBar().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

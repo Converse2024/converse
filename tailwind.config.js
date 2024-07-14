@@ -12,6 +12,18 @@ module.exports = {
 			}
 		},
 		extend: {
+			padding: {
+        '5px': '5px',
+      },
+			inset: {
+        '15px': '15px',
+      },
+			transitionProperty: {
+        'time-1': '0.1s',
+      },
+			zIndex: {
+        '1111': '1111',
+      },
 			colors: {
 				border: "hsl(var(--border) / <alpha-value>)",
 				input: "hsl(var(--input) / <alpha-value>)",

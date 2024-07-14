@@ -12,6 +12,178 @@ templ Base() {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<link rel="icon" type="image/x-icon" href="./../../../public/assets/favicon_dark/favicon.ico"/>
 			<link rel="stylesheet" href="./../../../public/assets/output.css"/>
+			<style>
+       @keyframes fade-in {
+         from { opacity: 0; }
+       }
+    
+       @keyframes fade-out {
+         to { opacity: 0; }
+       }
+    
+       @keyframes slide-from-right {
+         from { transform: translateX(90px); }
+       }
+    
+       @keyframes slide-to-left {
+         to { transform: translateX(-90px); }
+       }
+    
+       /* define animations for the old and new content */
+       ::view-transition-old(slide-it) {
+         animation: 180ms cubic-bezier(0.4, 0, 1, 1) both fade-out,
+         600ms cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left;
+       }
+       ::view-transition-new(slide-it) {
+         animation: 420ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in,
+         600ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
+       }
+    
+       /* tie the view transition to a given CSS class */
+       .slide-transition {
+           view-transition-name: slide-it;
+       }
+        .input-group {
+          position: relative;
+          margin: 20px 0px 5px 0px;
+        }
+
+        .input-group label {
+          position: absolute;
+          top: 50%;
+          left: 15px;
+          padding: 0px 5px;
+          transform: translateY(-50%);
+          pointer-events: none;
+          transition: 0.2s;
+          opacity: 0.7;
+        }
+        /*
+        .input-group input {
+          width: 320px;
+          height: 40px;
+          font-size: 16px;
+          color: #fff;
+          padding: 0 10px;
+          background: transparent;
+          border: 1.2px solid #fff;
+          outline: none;
+          border-radius: 5px;
+        }*/
+
+        .input-group input:focus ~ label,
+        .input-group input:valid ~ label {
+          top: 0;
+          font-size: 12px;
+          background: #030835;
+          color: #ffe5e5;
+          opacity: 1;
+          z-index: 1111;
+        }
+            .progress {
+          position: fixed;
+          top: 0;
+          z-index: 1000;
+          height: 4px;
+          width: 100%;
+          border-radius: 2px;
+          background-clip: padding-box;
+          overflow: hidden;
+        }
+        .progress .indeterminate:before {
+          content: "";
+          position: absolute;
+          background-color: inherit;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          will-change: left, right;
+          -webkit-animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395)
+            infinite;
+          animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+        }
+        .progress .indeterminate:after {
+          content: "";
+          position: absolute;
+          background-color: inherit;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          will-change: left, right;
+          -webkit-animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1)
+            infinite;
+          animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1)
+            infinite;
+          -webkit-animation-delay: 1.15s;
+          animation-delay: 1.15s;
+        }
+        .progress {
+          display: none;
+        }
+        .htmx-request .progress {
+          display: inline;
+        }
+        .htmx-request.progress {
+          display: inline;
+        }
+        @-webkit-keyframes indeterminate {
+          0% {
+            left: -35%;
+            right: 100%;
+          }
+          60% {
+            left: 100%;
+            right: -90%;
+          }
+          100% {
+            left: 100%;
+            right: -90%;
+          }
+        }
+        @keyframes indeterminate {
+          0% {
+            left: -35%;
+            right: 100%;
+          }
+          60% {
+            left: 100%;
+            right: -90%;
+          }
+          100% {
+            left: 100%;
+            right: -90%;
+          }
+        }
+        @-webkit-keyframes indeterminate-short {
+          0% {
+            left: -200%;
+            right: 100%;
+          }
+          60% {
+            left: 107%;
+            right: -8%;
+          }
+          100% {
+            left: 107%;
+            right: -8%;
+          }
+        }
+        @keyframes indeterminate-short {
+          0% {
+            left: -200%;
+            right: 100%;
+          }
+          60% {
+            left: 107%;
+            right: -8%;
+          }
+          100% {
+            left: 107%;
+            right: -8%;
+          }
+        }
+    </style>
+			<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
 			<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -20,7 +192,10 @@ templ Base() {
 			<script src="https://unpkg.com/htmx.org/dist/ext/multi-swap.js" defer></script>
 			<title>{ title }</title>
 		</head>
-		<body hx-ext="multi-swap" x-data="{theme: $persist('dark').using(sessionStorage)}" :class="theme" lang="en" class="h-screen w-screen">
+		<body hx-ext="multi-swap" x-data="{theme: $persist('dark').using(localStorage)}" :class="theme" lang="en" class="h-screen w-screen">
+			<div class="progress htmx-indicator" style="height: 3px; background-color: white;">
+				<div class="indeterminate" style="background-color: orange;"></div>
+			</div>
 			{ children... }
 		</body>
 	</html>

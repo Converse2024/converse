@@ -3,22 +3,26 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
+	"github.com/Sourjaya/converse/app/auth"
 	"github.com/Sourjaya/converse/app/templates/pages"
+	"github.com/Sourjaya/converse/env"
 	"github.com/Sourjaya/converse/middleware"
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 )
 
-func Load_Env() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal(err)
-	}
+type Host struct {
+	Echo *echo.Echo
 }
+
+type ServerConfig struct {
+	ListenAddr string
+}
+
+var sc ServerConfig
 
 func InitializeMiddleware(e *echo.Echo) {
 	e.Use(echomiddleware.Logger())
@@ -30,6 +34,13 @@ func InitializeMiddleware(e *echo.Echo) {
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderContentLength, echo.HeaderAcceptEncoding, echo.HeaderXCSRFToken, echo.HeaderAuthorization, echo.HeaderCacheControl, echo.HeaderXRequestedWith},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete, http.MethodOptions},
 	}))
+	e.Use(middleware.HXRedirectMiddleware)
+	e.Any("/public/*", func(c echo.Context) error {
+		if err := disableCache(staticDev())(c); err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func staticDev() echo.HandlerFunc {
@@ -46,37 +57,74 @@ func disableCache(next echo.HandlerFunc) echo.HandlerFunc {
 // router.Handle("/public/*", disableCache(staticDev()))
 func main() {
 	fmt.Println("getting started")
-	e := echo.New()
-	InitializeMiddleware(e)
-	e.Any("/public/*", func(c echo.Context) error {
-		if err := disableCache(staticDev())(c); err != nil {
-			return err
-		}
-		return nil
-	})
+	sc.ListenAddr = env.GetHTTPListenAddr()
+	hosts := map[string]*Host{}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	unguardedRoutes(e, &ctx)
-	//Load_Env()
-	listenAddr := os.Getenv("HTTP_LISTEN_ADDR")
 
-	e.Static("./app/assets", "css")
-	e.Static("./public/assets", "css")
-	//e.Static("/static", "static")
-	e.Logger.Fatal(e.Start(listenAddr))
+	// App
+	app := echo.New()
+	InitializeMiddleware(app)
+
+	hosts[fmt.Sprintf("app.localhost:%s", sc.ListenAddr)] = &Host{app}
+
+	app.Static("/", "app/assets")
+	app.Static("/", "public/assets")
+	unguardedRoutes(app, &ctx)
+
+	// Landing site
+	site := echo.New()
+	InitializeMiddleware(site)
+	hosts[fmt.Sprintf("localhost:%s", sc.ListenAddr)] = &Host{site}
+
+	site.GET("/", func(c echo.Context) error {
+		loginURL := fmt.Sprintf("http://app.localhost:%s/login", sc.ListenAddr)
+		component := pages.Index(loginURL)
+		return component.Render(ctx, c.Response().Writer)
+	})
+
+	// Server
+	e := echo.New()
+	InitializeMiddleware(e)
+	e.Any("/*", func(c echo.Context) (err error) {
+		req := c.Request()
+		res := c.Response()
+		host := hosts[req.Host]
+
+		if host == nil {
+			err = echo.ErrNotFound
+		} else {
+			host.Echo.ServeHTTP(res, req)
+		}
+
+		return
+	})
+
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", sc.ListenAddr)))
 }
+
 func unguardedRoutes(e *echo.Echo, ctx *context.Context) {
 	unguardedRoutes := e.Group("/")
-	//unguardedRoutes.Use(services.GuestMiddleware)
-	unguardedRoutes.GET("", func(c echo.Context) error {
-		component := pages.Index()
-		return component.Render(*ctx, c.Response().Writer)
-	})
+	unguardedRoutes.Use(middleware.HXRedirectMiddleware)
+	// unguardedRoutes.Use(services.GuestMiddleware)
 	unguardedRoutes.GET("login", func(c echo.Context) error {
-		component := pages.Login()
+		registerURL := fmt.Sprintf("http://localhost:%s", sc.ListenAddr)
+		component := pages.Login(pages.LoginPageData{}, registerURL)
 		return component.Render(*ctx, c.Response().Writer)
 	})
 	unguardedRoutes.GET("redirectlogin", func(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/login")
 	})
+	unguardedRoutes.GET("register", func(c echo.Context) error {
+		components := pages.Register(pages.RegisterPageData{})
+		return components.Render(*ctx, c.Response().Writer)
+	})
+	unguardedRoutes.POST("registration", auth.HandleRegistration)
+	//unguardedRoutes.GET("input", auth.HandleGetEmail)
+
+	// unguardedRoutes.GET("otp", func(c echo.Context) error {
+	// 	components := pages.Otp()
+	// 	return components.Render(*ctx, c.Response().Writer)
+	// })
 }

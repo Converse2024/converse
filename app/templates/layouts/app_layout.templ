@@ -1,12 +1,9 @@
 package layouts
 
-import "github.com/Sourjaya/converse/app/templates/components"
-
 templ App() {
 	@Base() {
 		<div id="app" class="w-screen h-screen">
-			@components.Navigation()
-			<div class="flex-grow flex items-center justify-center">
+			<div class="flex-grow flex items-center justify-center py-3">
 				{ children... }
 			</div>
 		</div>

@@ -4,11 +4,15 @@ import (
 	"github.com/Sourjaya/converse/app/templates/layouts"
 )
 
-templ Index() {
-	@layouts.App() {
+templ Index(loginURL string) {
+	@layouts.AppWithNavBar() {
 		<div class="text-center flex flex-col justify-center items-center mt-10 lg:mt-32">
 			<div class="flex flex-col gap-12">
-				<h1 class="inline-block text-transparent bg-clip-text max-w-2xl mx-auto text-5xl lg:text-7xl font-bold uppercase bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">converse</h1>
+				<h1
+					class="inline-block text-transparent bg-clip-text max-w-2xl mx-auto text-5xl lg:text-7xl font-bold uppercase bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+				>
+					converse
+				</h1>
 				<div class="flex flex-col gap-3">
 					<h1 class="max-w-2xl mx-auto text-2xl lg:text-4xl font-bold lg:leading-tight">
 						Crafting Conversations that Inspire, Connect, and Transform.
@@ -17,12 +21,12 @@ templ Index() {
 				</div>
 				<div hx-replace-url="true" class="flex justify-center">
 					<a
-						hx-get="/login"
-						hx-trigger="click"
-						hx-swap="outerHTML"
-						hx-target="#app"
+						href={ templ.SafeURL(loginURL) }
 						class="bg-primary w-fit rounded-md px-4 py-2 text-primary-foreground font-medium text-sm cursor-pointer"
-					>Try Now</a>
+					>
+						Try
+						Now
+					</a>
 				</div>
 			</div>
 		</div>
