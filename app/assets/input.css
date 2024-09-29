@@ -32,6 +32,7 @@
       --input: 249 63% 41%;
       --ring: 249 63% 41%;
       --radius: 0.5rem;
+      --top-calc: calc(50%-10px);
     }
 
     .dark {
@@ -49,6 +50,7 @@
       --input: 249 63% 41%; /* Light input color */
       --ring: 249 63% 41%; /* Light ring color */
       --radius: 0.5rem;
+      --c-10: calc(50%-10px);
     }
   }
 }

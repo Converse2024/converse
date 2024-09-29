@@ -1,19 +1,13 @@
 package auth
 
-import (
-	"time"
-)
-
 type User struct {
-	UpdatedAt  time.Time `json:"updated_at,omitempty"`
-	CreatedAt  time.Time `json:"created_at,omitempty"`
-	Username   string    `json:"username"`
-	FirstName  string    `json:"first_name"`
-	LastName   string    `json:"last_name"`
-	ProfilePic string    `json:"profile_pic"`
-	Email      string    `json:"email"`
-	Password   string    `json:"password"`
-	IsAdmin    bool      `json:"is_admin"`
+	Username   string `json:"username"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	ProfilePic string `json:"profile_pic"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+	IsAdmin    bool   `json:"is_admin"`
 }
 
 type OtpGenerateRequest struct {
@@ -31,6 +25,14 @@ type OtpVerifyRequest struct {
 type OtpApiResponse struct {
 	Message string `json:"message"`
 	Error   string `json:"error"`
+}
+
+type CDNResponse struct {
+	StatusCode int    `json:"statusCode"`
+	Message    string `json:"message"`
+	Data       struct {
+		Data string `json:"data"`
+	} `json:"data"`
 }
 
 /*

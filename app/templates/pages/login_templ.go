@@ -208,15 +208,7 @@ func LoginForm(values LoginFormValues, errors validate.Errors) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><button")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs(""))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Login</button></form>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -237,12 +229,10 @@ func labelAttrs(hasError bool) templ.Attributes {
 	}
 }
 
-func buttonAttrs(id string) templ.Attributes {
-	var class string
-	if id == "submit2" {
-		class = "pointer-events-none inline-flex text-primary-foreground items-center justify-center px-4 py-2 font-medium text-sm tracking-wide transition-colors duration-200 rounded-md bg-primary text-foreground hover:bg-primary/90 focus:ring focus:ring-primary focus:shadow-outline focus:outline-none"
-	} else {
-		class = "inline-flex text-primary-foreground items-center justify-center px-4 py-2 font-medium text-sm tracking-wide transition-colors duration-200 rounded-md bg-primary text-foreground hover:bg-primary/90 focus:ring focus:ring-primary focus:shadow-outline focus:outline-none"
+func buttonAttrs(hasError bool, id string) templ.Attributes {
+	class := "inline-flex text-primary-foreground items-center justify-center px-4 py-2 text-sm tracking-wide transition-colors duration-200 rounded-md bg-primary text-foreground hover:bg-primary/90 font-bold focus:ring focus:ring-primary focus:shadow-outline focus:outline-none"
+	if id == "submit2" || hasError {
+		class += " pointer-events-none"
 	}
 	return templ.Attributes{
 		"class": class,

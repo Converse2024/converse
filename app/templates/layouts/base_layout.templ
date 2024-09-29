@@ -9,9 +9,10 @@ templ Base() {
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<link rel="icon" type="image/x-icon" href="./../../../public/assets/favicon_dark/favicon.ico"/>
-			<link rel="stylesheet" href="./../../../public/assets/output.css"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no"/>
+			<link rel="icon" type="image/x-icon" href="assets/favicon_dark/favicon.ico"/>
+			<link rel="stylesheet" href="output.css"/>
+			<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.css" integrity="sha512-087vysR/jM0N5cp13Vlp+ZF9wx6tKbvJLwPO8Iit6J7R+n7uIMMjg37dEgexOshDmDITHYY5useeSmfD1MYiQA==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
 			<style>
        @keyframes fade-in {
          from { opacity: 0; }
@@ -182,19 +183,31 @@ templ Base() {
             right: -8%;
           }
         }
+          .cropper-view-box,
+          .cropper-face {
+            border-radius: 50%;
+          }
+
+          /* The css styles for `outline` do not follow `border-radius` on iOS/Safari (#979). */
+          .cropper-view-box {
+              outline: 0;
+              box-shadow: 0 0 0 1px #39f;
+          }
     </style>
 			<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
 			<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<script defer src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.js" integrity="sha512-lR8d1BXfYQuiqoM/LeGFVtxFyspzWFTZNyYIiE5O2CcAGtTCRRUMLloxATRuLz8EmR2fYqdXYlrGh+D6TVGp3g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+			<script src="https://cdn.lordicon.com/lordicon.js"></script>
 			<script src="https://unpkg.com/htmx.org@1.9.9" defer></script>
 			<script src="https://unpkg.com/htmx.org/dist/ext/ws.js" defer></script>
 			<script src="https://unpkg.com/htmx.org/dist/ext/multi-swap.js" defer></script>
 			<title>{ title }</title>
 		</head>
 		<body hx-ext="multi-swap" x-data="{theme: $persist('dark').using(localStorage)}" :class="theme" lang="en" class="h-screen w-screen">
-			<div class="progress htmx-indicator" style="height: 3px; background-color: white;">
-				<div class="indeterminate" style="background-color: orange;"></div>
+			<div class="progress htmx-indicator" style="height: 3px; background-color: #0299A7;">
+				<div class="indeterminate" style="background-color: #FF6002;"></div>
 			</div>
 			{ children... }
 		</body>

@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"time"
 	"unicode"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -288,13 +290,27 @@ func Min(n int) RuleSet {
 	}
 }
 
+func CheckUUID(field string) RuleSet {
+	return RuleSet{
+		Name:      "uuid",
+		RuleValue: field,
+		ValidateFunc: func(set RuleSet) bool {
+			_, err := uuid.Parse(field)
+			return err == nil
+		},
+		MessageFunc: func(set RuleSet) string {
+			return "This uuid is not valid"
+		},
+	}
+}
+
 func CheckEmailDB(field, uri string) RuleSet {
 	return RuleSet{
 		Name:      "checkdb",
 		RuleValue: field,
 		ValidateFunc: func(set RuleSet) bool {
 			email := set.FieldValue.(string)
-			url := fmt.Sprintf("http://%s/api/users/email/%s", uri, email)
+			url := fmt.Sprintf("http://%s/api/users/%s/%s", uri, field, email)
 			resp, err := http.Get(url)
 			if err != nil {
 				return false
@@ -304,6 +320,26 @@ func CheckEmailDB(field, uri string) RuleSet {
 		},
 		MessageFunc: func(set RuleSet) string {
 			return "This email id is already registered"
+		},
+	}
+}
+
+func CheckUsernameDB(field, uri string) RuleSet {
+	return RuleSet{
+		Name:      "checkdb",
+		RuleValue: field,
+		ValidateFunc: func(set RuleSet) bool {
+			username := set.FieldValue.(string)
+			url := fmt.Sprintf("http://%s/api/users/user/%s", uri, username)
+			resp, err := http.Get(url)
+			if err != nil {
+				return false
+			}
+			defer resp.Body.Close()
+			return resp.StatusCode != http.StatusOK
+		},
+		MessageFunc: func(set RuleSet) string {
+			return "This username is already in use."
 		},
 	}
 }

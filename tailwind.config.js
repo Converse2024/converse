@@ -17,12 +17,17 @@ module.exports = {
       },
 			inset: {
         '15px': '15px',
+				"c-10":"var(--top-calc)",
       },
 			transitionProperty: {
         'time-1': '0.1s',
       },
 			zIndex: {
         '1111': '1111',
+				'2222': '2222',
+      },
+			spacing: {
+        "top-calc":"var(--top-calc)",
       },
 			colors: {
 				border: "hsl(var(--border) / <alpha-value>)",

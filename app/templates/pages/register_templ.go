@@ -11,7 +11,8 @@ import "io"
 import "bytes"
 
 import (
-	"github.com/Sourjaya/converse/app/templates/errorComponent"
+	"fmt"
+	"github.com/Sourjaya/converse/app/templates/components"
 	"github.com/Sourjaya/converse/app/templates/layouts"
 	v "github.com/Sourjaya/converse/app/validate"
 )
@@ -25,8 +26,16 @@ type RegisterFormValues struct {
 	Email           string `form:"email"`
 	FirstName       string `form:"firstName"`
 	LastName        string `form:"lastName"`
-	Password        string `form:"password"`
+	Username        string `json:"username" form:"username"`
+	ProfilePic      string `json:"profilePic" form:"profilePic"`
+	Password        string `json:"password" form:"password"`
 	PasswordConfirm string `form:"passwordConfirm"`
+	Uuid            string
+}
+
+type Toggle struct {
+	Password    string
+	ConfirmPass string
 }
 
 func Register(data RegisterPageData) templ.Component {
@@ -48,11 +57,11 @@ func Register(data RegisterPageData) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"w-full justify-center\"><div class=\"mt-10 lg:mt-20\"><img src=\"public/assets/favicon_light/android-chrome-192x192.png\" alt=\"Light Logo\" class=\"max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain\" x-show=\"theme === &#39;dark&#39;\"> <img src=\"public/assets/favicon_dark/android-chrome-192x192.png\" alt=\"Dark Logo\" class=\"max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain\" x-show=\"theme === &#39;light&#39;\"><div id=\"register-card\" class=\"max-w-sm mx-auto sm:border sm:rounded-md sm:shadow-sm py-12 px-6 flex flex-col gap-8\"><h2 class=\"text-center text-2xl font-medium\">Signup</h2>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"container\" class=\"w-full justify-center\"><div class=\"mt-10 lg:mt-20\"><img src=\"assets/favicon_light/android-chrome-512x512.png\" alt=\"Light Logo\" class=\"max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain\" x-show=\"theme === &#39;dark&#39;\"> <img src=\"assets/favicon_dark/android-chrome-512x512.png\" alt=\"Dark Logo\" class=\"max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain\" x-show=\"theme === &#39;light&#39;\"><div id=\"register-card\" class=\"max-w-sm sm:max-w-lg mx-auto sm:border sm:rounded-md sm:shadow-sm py-12 px-6 flex flex-col gap-8\"><h2 class=\"text-center text-2xl font-medium\">Signup</h2>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = RegisterForm(data.FormValues, data.FormErrors).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = RegisterForm(&data.FormValues, data.FormErrors).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -76,7 +85,7 @@ func Register(data RegisterPageData) templ.Component {
 	})
 }
 
-func RegisterForm(values RegisterFormValues, errors v.Errors) templ.Component {
+func RegisterForm(values *RegisterFormValues, errors v.Errors) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -89,7 +98,7 @@ func RegisterForm(values RegisterFormValues, errors v.Errors) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<form id=\"registrationform\" hx-post=\"/registration?page=1\" class=\"slide-transition flex flex-col gap-4\" hx-swap=\"outerHTML transition:true\" hx-indicator=\".progress\"><div id=\"swap\"><div hx-target=\"#swap\" hx-swap=\"outerHTML\" class=\"input-group flex flex-col gap-1\"><input hx-post=\"/registration?check=email\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<form id=\"registrationform\" hx-post=\"/registration?page=1\" class=\"slide-transition flex flex-col gap-4\" hx-swap=\"outerHTML transition:true\" hx-indicator=\".progress\" hx-target=\"body\"><div id=\"swap\"><div class=\"input-group flex flex-col gap-1 relative\"><input hx-post=\"/registration?check=email\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -97,20 +106,28 @@ func RegisterForm(values RegisterFormValues, errors v.Errors) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"email\" id=\"email\" value=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"email\" id=\"email\" hx-swap=\"multi:#swap:outerHTML,#submit1:outerHTML\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(values.Email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 56, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 66, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required autocomplete=\"email\"> <label for=\"email\">Email </label></div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required autocomplete=\"email\" hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"> <label for=\"email\">Email </label><div id=\"loading\" class=\"htmx-indicator absolute right-3 top-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.Loading().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -122,7 +139,7 @@ func RegisterForm(values RegisterFormValues, errors v.Errors) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(errors.Get("email")[0])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 65, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 80, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -133,15 +150,15 @@ func RegisterForm(values RegisterFormValues, errors v.Errors) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><button id=\"submit1\" disabled")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><button id=\"submit1\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs("submit1"))
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs(true, "submit1"))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Signup</button><div class=\"flex flex-row items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500\"><p>Already have an account?</p><a class=\"flex flex-row items-center text-blue-600\" href=\"/login\" target=\"\" rel=\"noopener noreferrer\">Login</a></div></form><script>\n\t\tfunction checkErrors() {\n\t\t\tlet hasErrors = false;\n\t\t\tconst errorElements = document.querySelectorAll('.text-red-500.text-xs');\n\t\t\tconst emailInput = document.getElementById('email').value;\n\t\t\terrorElements.forEach((errorElement) => {\n\t\t\t\tif (errorElement.innerText.trim() !== '' || emailInput==\"\") {\n\t\t\t\t\thasErrors = true;\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tconst submitButton = document.getElementById('submit1');\n\t\t\tsubmitButton.disabled = hasErrors;\n\t\t}\n\n\t\t//Run checkErrors after any HTMX request to set the correct state after updates\n\t\tconst afterRequestListener = (event) => {\n  \t\tcheckErrors();\n\t\t};\n\t\tdocument.addEventListener('htmx:afterRequest', afterRequestListener);\n\t\tfunction removeAfterRequestListener() {\n  \t\tdocument.removeEventListener('htmx:afterRequest', afterRequestListener);\n  \t\t//console.log('htmx:afterRequest listener removed');\n\t\t}\n\t</script>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Send OTP</button><div class=\"flex flex-row items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500\"><p>Already have an account?</p><a class=\"flex flex-row items-center text-blue-600\" href=\"/login\" target=\"\" rel=\"noopener noreferrer\">Login</a></div></form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -152,7 +169,7 @@ func RegisterForm(values RegisterFormValues, errors v.Errors) templ.Component {
 	})
 }
 
-func Otp(err error) templ.Component {
+func OtpPage(values *RegisterFormValues) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -165,57 +182,30 @@ func Otp(err error) templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if err != nil {
-			templ_7745c5c3_Err = errorComponent.Error500Component().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Var7 := templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+			if !templ_7745c5c3_IsBuffer {
+				templ_7745c5c3_Buffer = templ.GetBuffer()
+				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"container\" class=\"w-full justify-center\"><div class=\"mt-10 lg:mt-20\"><img src=\"assets/favicon_light/android-chrome-512x512.png\" alt=\"Light Logo\" class=\"max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain\" x-show=\"theme === &#39;dark&#39;\"> <img src=\"assets/favicon_dark/android-chrome-512x512.png\" alt=\"Dark Logo\" class=\"max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain\" x-show=\"theme === &#39;light&#39;\"><div id=\"register-card\" class=\"max-w-sm sm:max-w-lg mx-auto sm:border sm:rounded-md sm:shadow-sm py-12 px-6 flex flex-col gap-8\"><h2 class=\"text-center text-2xl font-medium\">Signup</h2>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		} else {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div hx-target=\"this\" class=\"slide-transition\" hx-swap=\"outerHTML transition:true\"><header class=\"flex flex-col items-center justify-center text-8xl\"><i class=\"bx bx-check-shield\"></i></header><div class=\"flex flex-row items-center justify-center text-sm font-medium text-inherit p-4\"><p>We have sent a code to your email</p></div><form hx-post=\"/registration?page=2\" class=\"flex flex-col gap-4\" hx-indicator=\".progress\"><div class=\"flex flex-col space-y-16\"><div class=\"flex flex-row items-center justify-between mx-auto w-full max-w-xs\"><input name=\"otp1\" maxlength=\"1\" class=\"w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700\" type=\"text\" name=\"\" id=\"\"> <input name=\"otp2\" maxlength=\"1\" disabled class=\"w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700\" type=\"text\" name=\"\" id=\"\"> <input name=\"otp3\" maxlength=\"1\" disabled class=\"w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700\" type=\"text\" name=\"\" id=\"\"> <input name=\"otp4\" maxlength=\"1\" disabled class=\"w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700\" type=\"text\" name=\"\" id=\"\"></div><div class=\"flex flex-col space-y-5\"><div class=\"flex flex-col items-center justify-center\"><button id=\"submit2\"")
+			templ_7745c5c3_Err = Otp(values).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs("submit2"))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Enter OTP</button></div><div class=\"flex flex-row items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500\"><p>Didn't recieve code?</p><a hx-post=\"/registration?check=resendOTP\" hx-target=\"#resend\" hx-indicator=\".progress\" hx-swap=\"outerHTML\" id=\"resend\" class=\"pointer-events-none cursor-default flex flex-row items-center text-blue-600\" rel=\"noopener noreferrer\">Resend in<span class=\"flex flex-row items-center text-blue-600 ml-1\" id=\"countdown\" style=\"display: none;\"></span></a></div></div></div></form></div><script>\n\tremoveAfterRequestListener()\n\t const inputs = document.querySelectorAll(\"input\"),\n  button = document.querySelector(\"button\");\n\n// iterate over all inputs\ninputs.forEach((input, index1) => {\n  input.addEventListener(\"keyup\", (e) => {\n    // This code gets the current input element and stores it in the currentInput variable\n    // This code gets the next sibling element of the current input element and stores it in the nextInput variable\n    // This code gets the previous sibling element of the current input element and stores it in the prevInput variable\n    const currentInput = input,\n      nextInput = input.nextElementSibling,\n      prevInput = input.previousElementSibling;\n    // if the next input is disabled and the current value is not empty\n    //  enable the next input and focus on it\n    if (nextInput && nextInput.hasAttribute(\"disabled\") && currentInput.value !== \"\") {\n      nextInput.removeAttribute(\"disabled\");\n      nextInput.focus();\n    }\n\n    // if the backspace key is pressed\n    if (e.key === \"Backspace\") {\n      // iterate over all inputs again\n      inputs.forEach((input, index2) => {\n        // if the index1 of the current input is less than or equal to the index2 of the input in the outer loop\n        // and the previous element exists, set the disabled attribute on the input and focus on the previous element\n        if (index1 <= index2 && prevInput) {\n          input.setAttribute(\"disabled\", true);\n          input.value = \"\";\n          prevInput.focus();\n        }\n      });\n    }\n    //if the fourth input( which index number is 3) is not empty and has not disable attribute then\n    //add active class if not then remove the active class.\n    if (!inputs[3].disabled && inputs[3].value !== \"\") {\n      button.classList.remove(\"pointer-events-none\");\n\t\t\tbutton.innerText=\"Verify OTP\"\n      return;\n    }\n\t\tbutton.innerText=\"Enter OTP\"\n    button.classList.add(\"pointer-events-none\");\n  });\n});\nlet countdownTimer;\nfunction startCountdown(duration) {\n\t\t\t//console.log(\"timer started\")\n      var timer = duration, minutes, seconds;\n      var countdown = document.getElementById(\"countdown\");\n      countdown.style.display = \"inline-block\"; // Display countdown\n\n\t\t\tclearInterval(countdownTimer);\n\t\t\t// window.addEventListener('htmx:afterSettle',()=>{\n\t\t\t// \tclearInterval(countdownTimer);\n\t\t\t// });\n     countdownTimer =  setInterval(function () {\n        minutes = parseInt(timer / 60, 10);\n        seconds = parseInt(timer % 60, 10);\n        minutes = minutes < 10 ? \"0\" + minutes : minutes;\n        seconds = seconds < 10 ? \"0\" + seconds : seconds;\n        countdown.textContent = minutes + \":\" + seconds;\n        countdown.textContent = minutes + \":\" + seconds;\n\t\t\t\t//console.log(timer)\n        if (--timer < 0) {\n          clearInterval(countdownTimer);\n\t\t\t\t  var resend = document.getElementById(\"resend\");\n\t\t\t\t\tresend.classList.remove(\"pointer-events-none\", \"cursor-default\");\n\t\t\t\t\tresend.classList.add(\"pointer-events-auto\", \"cursor-pointer\");\n\t\t\t\t\tresend.textContent=\"Resend\"\n          countdown.style.display = \"none\";\n        }\n      }, 1000);\n    }\n\t\tconst otpRequestListener=()=>{\n\t\t\tinputs[0].focus();\n\t\t\tstartCountdown(120);\n\t\t} \n//focus the first input which index is 0 on window load\n\t\twindow.addEventListener(\"htmx:afterSettle\", otpRequestListener);\n\t\tfunction removeOTPRequestListener() {\n  \t\twindow.removeEventListener('htmx:afterSettle', otpRequestListener);\n\t\t\tclearInterval(countdownTimer)\n  \t\t//console.log('htmx:afterSettle listener removed');\n\t\t}\n\t</script>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
+			if !templ_7745c5c3_IsBuffer {
+				_, templ_7745c5c3_Err = io.Copy(templ_7745c5c3_W, templ_7745c5c3_Buffer)
 			}
-		}
-		if !templ_7745c5c3_IsBuffer {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
-		}
-		return templ_7745c5c3_Err
-	})
-}
-
-func Details(err error) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
-		if !templ_7745c5c3_IsBuffer {
-			templ_7745c5c3_Buffer = templ.GetBuffer()
-			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var7 == nil {
-			templ_7745c5c3_Var7 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		if err != nil {
-			templ_7745c5c3_Err = errorComponent.Error500Component().Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		} else {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"slide-transition\">Hello</div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script>\n\tremoveOTPRequestListener();\n\t</script>")
+			return templ_7745c5c3_Err
+		})
+		templ_7745c5c3_Err = layouts.App().Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -226,7 +216,7 @@ func Details(err error) templ.Component {
 	})
 }
 
-func EmailInput(values RegisterFormValues, errors v.Errors) templ.Component {
+func Otp(values *RegisterFormValues) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -239,7 +229,55 @@ func EmailInput(values RegisterFormValues, errors v.Errors) templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"swap\"><div hx-target=\"#swap\" hx-swap=\"outerHTML\" class=\"input-group flex flex-col gap-1\"><input hx-post=\"/registration?check=email\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div hx-target=\"this\" class=\"slide-transition\" hx-swap=\"outerHTML transition:true\"><header class=\"flex flex-col items-center justify-center text-8xl\"><i class=\"bx bx-check-shield\"></i></header><div class=\"flex flex-row items-center justify-center text-sm font-medium text-inherit p-4\"><p>We have sent a code to your email</p></div><form")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, htmxAttrs("post", fmt.Sprintf("/registration?page=2&id=%s", values.Uuid)))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" class=\"flex flex-col gap-4\" hx-indicator=\".progress\"><div class=\"flex flex-col space-y-16\"><div class=\"flex flex-row items-center justify-between mx-auto w-full max-w-xs\"><input required name=\"otp1\" maxlength=\"1\" class=\"w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700\" type=\"text\" name=\"\" id=\"\"> <input required name=\"otp2\" maxlength=\"1\" disabled class=\"w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700\" type=\"text\" name=\"\" id=\"\"> <input required name=\"otp3\" maxlength=\"1\" disabled class=\"w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700\" type=\"text\" name=\"\" id=\"\"> <input required name=\"otp4\" maxlength=\"1\" disabled class=\"w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700\" type=\"text\" name=\"\" id=\"\"></div><div class=\"flex flex-col space-y-5\"><div class=\"flex flex-col items-center justify-center\"><button id=\"submit2\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs(false, "submit2"))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Enter OTP</button></div><div class=\"flex flex-row items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500\"><p>Didn't recieve code?</p><a")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, htmxAttrs("post", fmt.Sprintf("/registration?check=resendOTP&id=%s", values.Uuid)))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-target=\"#resend\" hx-indicator=\".progress\" hx-swap=\"outerHTML\" id=\"resend\" class=\"pointer-events-none cursor-default flex flex-row items-center text-blue-600\" rel=\"noopener noreferrer\">Resend in<span class=\"flex flex-row items-center text-blue-600 ml-1\" id=\"countdown\" style=\"display: none;\"></span></a></div></div></div></form></div><script>\n\t \t\tconst inputs = document.querySelectorAll(\"input\"),\n  \t\tbutton = document.querySelector(\"button\");\n\n\t\t\t// iterate over all inputs\n\t\t\tinputs.forEach((input, index1) => {\n\t\t\tinput.addEventListener(\"keyup\", (e) => {\n\t\t\t\tconst currentInput = input,\n\t\t\t\t\tnextInput = input.nextElementSibling,\n\t\t\t\t\tprevInput = input.previousElementSibling;\n\t\t\t\t// if the next input is disabled and the current value is not empty\n\t\t\t\t//  enable the next input and focus on it\n\t\t\t\tif (nextInput && nextInput.hasAttribute(\"disabled\") && currentInput.value !== \"\") {\n\t\t\t\t\tnextInput.removeAttribute(\"disabled\");\n\t\t\t\t\tnextInput.focus();\n\t\t\t\t}\n\n\t\t\t\t// if the backspace key is pressed\n\t\t\t\tif (e.key === \"Backspace\") {\n\t\t\t\t\t// iterate over all inputs again\n\t\t\t\t\tinputs.forEach((input, index2) => {\n\t\t\t\t\t\tif (index1 <= index2 && prevInput) {\n\t\t\t\t\t\t\tinput.setAttribute(\"disabled\", true);\n\t\t\t\t\t\t\tinput.value = \"\";\n\t\t\t\t\t\t\tprevInput.focus();\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t\t//if the fourth input( which index number is 3) is not empty and has not disable attribute then\n\t\t\t\t//add active class if not then remove the active class.\n\t\t\t\tif (!inputs[3].disabled && inputs[3].value !== \"\") {\n\t\t\t\t\tbutton.classList.remove(\"pointer-events-none\");\n\t\t\t\t\tbutton.innerText=\"Verify OTP\"\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tbutton.innerText=\"Enter OTP\"\n\t\t\t\tbutton.classList.add(\"pointer-events-none\");\n\t\t\t});\n\t\t\t});\n\t\t\tlet countdownTimer;\n\t\t\tfunction startCountdown(duration) {\n\t\t\t\t\t//console.log(\"timer started\")\n\t\t\t\t\tvar timer = duration, minutes, seconds;\n\t\t\t\t\tvar countdown = document.getElementById(\"countdown\");\n\t\t\t\t\tcountdown.style.display = \"inline-block\"; // Display countdown\n\n\t\t\t\t\tclearInterval(countdownTimer);\n\t\t\t\t\t// window.addEventListener('htmx:afterSettle',()=>{\n\t\t\t\t\t// \tclearInterval(countdownTimer);\n\t\t\t\t\t// });\n\t\t\t\tcountdownTimer =  setInterval(function () {\n\t\t\t\t\t\tminutes = parseInt(timer / 60, 10);\n\t\t\t\t\t\tseconds = parseInt(timer % 60, 10);\n\t\t\t\t\t\tminutes = minutes < 10 ? \"0\" + minutes : minutes;\n\t\t\t\t\t\tseconds = seconds < 10 ? \"0\" + seconds : seconds;\n\t\t\t\t\t\tcountdown.textContent = minutes + \":\" + seconds;\n\t\t\t\t\t\t//console.log(timer)\n\t\t\t\t\t\tif (--timer < 0) {\n\t\t\t\t\t\t\tclearInterval(countdownTimer);\n\t\t\t\t\t\t\tvar resend = document.getElementById(\"resend\");\n\t\t\t\t\t\t\tresend.classList.remove(\"pointer-events-none\", \"cursor-default\");\n\t\t\t\t\t\t\tresend.classList.add(\"pointer-events-auto\", \"cursor-pointer\");\n\t\t\t\t\t\t\tresend.textContent=\"Resend\"\n\t\t\t\t\t\t\tcountdown.style.display = \"none\";\n\t\t\t\t\t\t}\n\t\t\t\t\t}, 1000);\n\t\t\t\t}\n\t\t\t\tconst otpRequestListener=()=>{\n\t\t\t\t\tinputs[0].focus();\n\t\t\t\t\tstartCountdown(120);\n\t\t\t\t} \n\t\t\t\t//focus the first input which index is 0 on window load\n\t\t\t\twindow.addEventListener(\"DOMContentLoaded\", otpRequestListener);\n\t\t\t\tfunction removeOTPRequestListener() {\n\t\t\t\t\twindow.removeEventListener('htmx:afterSettle', otpRequestListener);\n\t\t\t\t\tclearInterval(countdownTimer)\n\t\t\t\t}\n\t\t</script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if !templ_7745c5c3_IsBuffer {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
+func EmailInput(values *RegisterFormValues, errors v.Errors) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+		if !templ_7745c5c3_IsBuffer {
+			templ_7745c5c3_Buffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var9 == nil {
+			templ_7745c5c3_Var9 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"swap\"><div class=\"input-group flex flex-col gap-1\"><input hx-post=\"/registration?check=email\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -247,20 +285,28 @@ func EmailInput(values RegisterFormValues, errors v.Errors) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"email\" id=\"email\" value=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"email\" id=\"email\" hx-swap=\"multi:#swap:outerHTML,#submit1:outerHTML\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(values.Email)
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(values.Email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 244, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 235, Col: 24}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required autocomplete=\"email\"> <label for=\"email\">Email </label></div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" autocomplete=\"email\" hx-indicator=\"#loading\" required hx-sync=\"closest form:abort\"> <label for=\"email\">Email </label><div id=\"loading\" class=\"htmx-indicator absolute right-3 top-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.Loading().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -269,12 +315,12 @@ func EmailInput(values RegisterFormValues, errors v.Errors) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(errors.Get("email")[0])
+			var templ_7745c5c3_Var11 string
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(errors.Get("email")[0])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 253, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 249, Col: 61}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -283,7 +329,15 @@ func EmailInput(values RegisterFormValues, errors v.Errors) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><button id=\"submit1\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs(errors.Has("email"), "submit1"))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Send OTP</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -294,31 +348,7 @@ func EmailInput(values RegisterFormValues, errors v.Errors) templ.Component {
 	})
 }
 
-func Resend() templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
-		if !templ_7745c5c3_IsBuffer {
-			templ_7745c5c3_Buffer = templ.GetBuffer()
-			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var11 == nil {
-			templ_7745c5c3_Var11 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a hx-post=\"/registration?check=resendOTP\" hx-target=\"#resend\" hx-swap=\"outerHTML\" hx-indicator=\".progress\" id=\"resend\" class=\"pointer-events-none cursor-default flex flex-row items-center text-blue-600\" rel=\"noopener noreferrer\">Resend in <span class=\"flex flex-row items-center text-blue-600 ml-1\" id=\"countdown\" style=\"display: none;\"></span></a>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if !templ_7745c5c3_IsBuffer {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
-		}
-		return templ_7745c5c3_Err
-	})
-}
-
-func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
+func Resend(values *RegisterFormValues) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -331,59 +361,51 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<form hx-post=\"/signup\" class=\"flex flex-col gap-4\"><div class=\"flex flex-col gap-1\"><label for=\"email\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, labelAttrs(errors.Has("email")))
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, htmxAttrs("post", fmt.Sprintf("/registration?check=resendOTP&id=%s", values.Uuid)))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Email *</label> <input")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-target=\"#resend\" hx-swap=\"outerHTML\" hx-indicator=\".progress\" id=\"resend\" class=\"pointer-events-none cursor-default flex flex-row items-center text-blue-600\" rel=\"noopener noreferrer\">Resend in <span class=\"flex flex-row items-center text-blue-600 ml-1\" id=\"countdown\" style=\"display: none;\"></span></a>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(errors.Has("email")))
+		if !templ_7745c5c3_IsBuffer {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
+func DetailsForm(values *RegisterFormValues, errors v.Errors, toggle Toggle) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+		if !templ_7745c5c3_IsBuffer {
+			templ_7745c5c3_Buffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var13 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var13 == nil {
+			templ_7745c5c3_Var13 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<form")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"email\" id=\"email\" value=\"")
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, htmxAttrs("post", fmt.Sprintf("/registration?page=3&id=%s", values.Uuid)))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(values.Email)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 269, Col: 93}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" class=\"slide-transition flex flex-col gap-4\" hx-swap=\"outerHTML transition:true\" hx-indicator=\".progress\"><div id=\"swap1\"><div class=\"flex flex-col sm:flex-row gap-2\"><div class=\"input-group flex flex-col gap-1 relative\"><input")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"> ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if errors.Has("email") {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"text-red-500 text-xs\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var14 string
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(errors.Get("email")[0])
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 271, Col: 62}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"flex flex-col gap-1\"><label for=\"firstName\">First Name *</label> <input")
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, htmxAttrs("post", fmt.Sprintf("/registration?check=details&id=%s", values.Uuid)))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -391,20 +413,28 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"firstName\" id=\"firstName\" value=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"firstName\" id=\"firstName\" hx-swap=\"multi:#swap1:outerHTML,#submit3:outerHTML\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(values.FirstName)
+		var templ_7745c5c3_Var14 string
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(values.FirstName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 276, Col: 109}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 277, Col: 30}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"> ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required autocomplete=\"firstName\" hx-indicator=\"#loading\" hx-sync=\"closest form:abort\"> <label for=\"firstName\">First Name</label><div id=\"loading\" class=\"htmx-indicator absolute right-3 top-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.Loading().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -418,12 +448,12 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var16 string
-				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(err)
+				var templ_7745c5c3_Var15 string
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(err)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 280, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 291, Col: 45}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -437,7 +467,15 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"flex flex-col gap-1\"><label for=\"lastName\">Last Name *</label> <input")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"input-group flex flex-col gap-1 relative\"><input")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, htmxAttrs("post", fmt.Sprintf("/registration?check=details&id=%s", values.Uuid)))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#swap1:outerHTML,#submit3:outerHTML\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -449,16 +487,192 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(values.LastName)
+		var templ_7745c5c3_Var16 string
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(values.LastName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 287, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 302, Col: 29}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"> ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required autocomplete=\"email\" hx-indicator=\"#loading\" hx-sync=\"closest form:abort\"> <label for=\"lastName\">Last Name</label><div id=\"loading\" class=\"htmx-indicator absolute right-3 top-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.Loading().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if errors.Has("lastName") {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<ul class=\"list-disc ml-4\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for _, err := range errors.Get("lastName") {
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<li class=\"text-red-500 text-xs\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var17 string
+				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(err)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 316, Col: 45}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</li>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</ul>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = PasswordInput(values, errors, toggle).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</form><script>\n\t\t\tremoveOTPRequestListener();\n\t</script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if !templ_7745c5c3_IsBuffer {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
+func DetailsInput(values *RegisterFormValues, errors v.Errors) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+		if !templ_7745c5c3_IsBuffer {
+			templ_7745c5c3_Buffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var18 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var18 == nil {
+			templ_7745c5c3_Var18 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"swap1\"><div class=\"flex flex-col sm:flex-row gap-2\"><div class=\"flex flex-col\"><div class=\"input-group flex flex-col gap-1 relative\"><input")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, htmxAttrs("post", fmt.Sprintf("/registration?check=details&id=%s", values.Uuid)))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(errors.Has("firstName")))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"firstName\" id=\"firstName\" hx-swap=\"multi:#swap1:outerHTML,#submit3:outerHTML\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var19 string
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(values.FirstName)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 340, Col: 30}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required autocomplete=\"firstname\" hx-indicator=\"#loading\" hx-sync=\"closest form:abort\"> <label for=\"firstName\">First Name</label><div id=\"loading\" class=\"htmx-indicator absolute right-3 top-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.Loading().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if errors.Has("firstName") {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<ul class=\"list-disc ml-4\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for _, err := range errors.Get("firstName") {
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<li class=\"text-red-500 text-xs\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var20 string
+				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(err)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 354, Col: 45}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</li>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</ul>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"flex flex-col\"><div class=\"input-group flex flex-col gap-1 relative\"><input")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, htmxAttrs("post", fmt.Sprintf("/registration?check=details&id=%s", values.Uuid)))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#swap1:outerHTML,#submit3:outerHTML\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(errors.Has("lastName")))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"lastName\" id=\"lastName\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var21 string
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(values.LastName)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 367, Col: 29}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required autocomplete=\"email\" hx-indicator=\"#loading\" hx-sync=\"closest form:abort\"> <label for=\"lastName\">Last Name</label><div id=\"loading\" class=\"htmx-indicator absolute right-3 top-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.Loading().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -472,12 +686,12 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var18 string
-				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(err)
+				var templ_7745c5c3_Var22 string
+				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(err)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 291, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 381, Col: 45}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -491,7 +705,95 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"flex flex-col gap-1\"><label for=\"password\">Password *</label> <input")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></div><button id=\"submit3\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs(errors.Any(), "submit3"))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Next</button>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if !templ_7745c5c3_IsBuffer {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
+func typeAttrs(toggle string) templ.Attributes {
+	var t string
+	if toggle == "show" {
+		t = "password"
+	} else {
+		t = "text"
+	}
+	return templ.Attributes{
+		"type": t,
+	}
+}
+func srcAttrs(toggle string) templ.Attributes {
+	var src string
+	if toggle == "show" {
+		src = "/assets/icons/eye.png"
+	} else {
+		src = "/assets/icons/hide.png"
+	}
+	return templ.Attributes{
+		"src": src,
+	}
+}
+
+func htmxAttrs(postfix, uri string) templ.Attributes {
+	if postfix == "post" {
+		return templ.Attributes{
+			"hx-post": uri,
+		}
+	} else {
+		return templ.Attributes{
+			"hx-get": uri,
+		}
+	}
+}
+
+func hxAttrs(method string, toggle Toggle, isPass bool) templ.Attributes {
+	if method == "post" {
+		return templ.Attributes{
+			"hx-post": fmt.Sprintf("/registration?check=password&toggleP=%s&toggleC=%s", toggle.Password, toggle.ConfirmPass),
+		}
+	}
+	if isPass {
+		return templ.Attributes{
+			"hx-post": fmt.Sprintf("/view?toggleP=%s&toggleC=%s", toggle.Password, toggle.ConfirmPass),
+		}
+	} else {
+		return templ.Attributes{
+			"hx-post": fmt.Sprintf("/viewC?toggleP=%s&toggleC=%s", toggle.Password, toggle.ConfirmPass),
+		}
+	}
+}
+
+func PasswordInput(values *RegisterFormValues, errors v.Errors, toggle Toggle) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+		if !templ_7745c5c3_IsBuffer {
+			templ_7745c5c3_Buffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var23 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var23 == nil {
+			templ_7745c5c3_Var23 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"swap2\"><div class=\"flex flex-col\"><div class=\"input-group flex flex-col gap-1\"><input")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("post", toggle, true))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -499,7 +801,40 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" type=\"password\" name=\"password\" id=\"password\"> ")
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, typeAttrs(toggle.Password))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"password\" id=\"password\" hx-swap=\"multi:#swap2:outerHTML,#submit3:outerHTML\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var24 string
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(values.Password)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 456, Col: 28}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"> <label for=\"password\">Password</label><div id=\"show\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("toggle", toggle, true))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#password:outerHTML,#show:outerHTML,#passwordConfirm:outerHTML,#showConfirm:outerHTML\" class=\"z-[2222] cursor-pointer size-4 absolute right-3 top-2\" hx-trigger=\"click\"><img")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, srcAttrs(toggle.Password))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" alt=\"show/hide\"></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -513,12 +848,12 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var19 string
-				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(err)
+				var templ_7745c5c3_Var25 string
+				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(err)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 302, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 469, Col: 44}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -532,7 +867,15 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"flex flex-col gap-1\"><label for=\"passwordConfirm\">Confirm Password *</label> <input")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"flex flex-col\"><div class=\"input-group flex flex-col gap-1\"><input")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("post", toggle, false))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, typeAttrs(toggle.ConfirmPass))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -540,7 +883,36 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" type=\"password\" name=\"passwordConfirm\" id=\"passwordConfirm\"> ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"passwordConfirm\" id=\"passwordConfirm\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var26 string
+		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(values.PasswordConfirm)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 482, Col: 35}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-swap=\"multi:#swap2:outerHTML,#submit3:outerHTML\" required hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"> <label for=\"passwordConfirm\">Confirm Password</label><div id=\"showConfirm\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("toggle", toggle, false))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#passwordConfirm:outerHTML,#showConfirm:outerHTML,#password:outerHTML,#show:outerHTML\" class=\"z-[2222] cursor-pointer size-4 absolute right-3 top-2\" hx-trigger=\"click\"><img")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, srcAttrs(toggle.ConfirmPass))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" alt=\"show/hide\"></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -549,12 +921,12 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var20 string
-			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(errors.Get("passwordConfirm")[0])
+			var templ_7745c5c3_Var27 string
+			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(errors.Get("passwordConfirm")[0])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 311, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 494, Col: 72}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -563,15 +935,15 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><button")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><button id=\"submit3\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs("submit1"))
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs(errors.Any(), "submit3"))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Signup</button></form>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Next</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -582,7 +954,7 @@ func SignupForm(values RegisterFormValues, errors v.Errors) templ.Component {
 	})
 }
 
-func ConfirmEmail(email string) templ.Component {
+func ViewPassword(values *RegisterFormValues, toggle Toggle) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -590,25 +962,684 @@ func ConfirmEmail(email string) templ.Component {
 			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var21 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var21 == nil {
-			templ_7745c5c3_Var21 = templ.NopComponent
+		templ_7745c5c3_Var28 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var28 == nil {
+			templ_7745c5c3_Var28 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"text-sm\">An email confirmation link has been sent to: <span class=\"underline font-medium\">")
+		if toggle.Password == "show" {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<input")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("post", Toggle{Password: "hide", ConfirmPass: toggle.ConfirmPass}, true))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, typeAttrs("hide"))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"password\" id=\"password\" hx-swap=\"multi:#swap2:outerHTML,#submit3:outerHTML\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var29 string
+			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(values.Password)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 512, Col: 26}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"><div id=\"show\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("toggle", Toggle{Password: "hide", ConfirmPass: toggle.ConfirmPass}, true))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#password:outerHTML,#show:outerHTML,#passwordConfirm:outerHTML,#showConfirm:outerHTML\" class=\"z-[2222] cursor-pointer size-4 absolute right-3 top-2\" hx-trigger=\"click\"><img")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, srcAttrs("hide"))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" alt=\"show/hide\"></div><input")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("post", Toggle{Password: "hide", ConfirmPass: toggle.ConfirmPass}, false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, typeAttrs(toggle.ConfirmPass))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"passwordConfirm\" id=\"passwordConfirm\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var30 string
+			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(values.PasswordConfirm)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 526, Col: 33}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-swap=\"multi:#swap2:outerHTML,#submit3:outerHTML\" required hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"><div id=\"showConfirm\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("toggle", Toggle{Password: "hide", ConfirmPass: toggle.ConfirmPass}, false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#passwordConfirm:outerHTML,#showConfirm:outerHTML,#password:outerHTML,#show:outerHTML\" class=\"z-[2222] cursor-pointer size-4 absolute right-3 top-2\" hx-trigger=\"click\"><img")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, srcAttrs(toggle.ConfirmPass))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" alt=\"show/hide\"></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<input")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("post", Toggle{Password: "show", ConfirmPass: toggle.ConfirmPass}, true))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, typeAttrs("show"))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"password\" id=\"password\" hx-swap=\"multi:#swap2:outerHTML,#submit3:outerHTML\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var31 string
+			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(values.Password)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 543, Col: 26}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"><div id=\"show\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("toggle", Toggle{Password: "show", ConfirmPass: toggle.ConfirmPass}, true))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#password:outerHTML,#show:outerHTML,#passwordConfirm:outerHTML,#showConfirm:outerHTML\" class=\"z-[2222] cursor-pointer size-4 absolute right-3 top-2\" hx-trigger=\"click\"><img")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, srcAttrs("show"))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" alt=\"show/hide\"></div><input")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("post", Toggle{Password: "show", ConfirmPass: toggle.ConfirmPass}, false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, typeAttrs(toggle.ConfirmPass))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"passwordConfirm\" id=\"passwordConfirm\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var32 string
+			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(values.PasswordConfirm)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 557, Col: 33}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-swap=\"multi:#swap2:outerHTML,#submit3:outerHTML\" required hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"><div id=\"showConfirm\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("toggle", Toggle{Password: "show", ConfirmPass: toggle.ConfirmPass}, false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#passwordConfirm:outerHTML,#showConfirm:outerHTML,#password:outerHTML,#show:outerHTML\" class=\"z-[2222] cursor-pointer size-4 absolute right-3 top-2\" hx-trigger=\"click\"><img")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, srcAttrs(toggle.ConfirmPass))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" alt=\"show/hide\"></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		if !templ_7745c5c3_IsBuffer {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
+func ViewConfirmPassword(values *RegisterFormValues, toggle Toggle) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+		if !templ_7745c5c3_IsBuffer {
+			templ_7745c5c3_Buffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var33 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var33 == nil {
+			templ_7745c5c3_Var33 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		if toggle.ConfirmPass == "show" {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<input")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("post", Toggle{Password: toggle.Password, ConfirmPass: "hide"}, true))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, typeAttrs(toggle.Password))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"password\" id=\"password\" hx-swap=\"multi:#swap2:outerHTML,#submit3:outerHTML\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var34 string
+			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(values.Password)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 578, Col: 26}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"><div id=\"show\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("toggle", Toggle{Password: toggle.Password, ConfirmPass: "hide"}, true))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#password:outerHTML,#show:outerHTML,#passwordConfirm:outerHTML,#showConfirm:outerHTML\" class=\"z-[2222] cursor-pointer size-4 absolute right-3 top-2\" hx-trigger=\"click\"><img")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, srcAttrs(toggle.Password))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" alt=\"show/hide\"></div><input")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("post", Toggle{Password: toggle.Password, ConfirmPass: "hide"}, false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, typeAttrs("hide"))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"passwordConfirm\" id=\"passwordConfirm\" hx-swap=\"multi:#swap2:outerHTML,#submit3:outerHTML\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var35 string
+			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(values.PasswordConfirm)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 593, Col: 33}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"><div id=\"showConfirm\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("toggle", Toggle{Password: toggle.Password, ConfirmPass: "hide"}, false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#passwordConfirm:outerHTML,#showConfirm:outerHTML,#password:outerHTML,#show:outerHTML\" class=\"z-[2222] cursor-pointer size-4 absolute right-3 top-2\" hx-trigger=\"click\"><img")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, srcAttrs("hide"))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" alt=\"show/hide\"></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<input")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("post", Toggle{Password: toggle.Password, ConfirmPass: "show"}, true))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, typeAttrs(toggle.Password))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"password\" id=\"password\" hx-swap=\"multi:#swap2:outerHTML,#submit3:outerHTML\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var36 string
+			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(values.Password)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 609, Col: 26}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"> <label for=\"password\">Password</label><div id=\"show\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("toggle", Toggle{Password: toggle.Password, ConfirmPass: "show"}, true))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#password:outerHTML,#show:outerHTML,#passwordConfirm:outerHTML,#showConfirm:outerHTML\" class=\"z-[2222] cursor-pointer size-4 absolute right-3 top-2\" hx-trigger=\"click\"><img")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, srcAttrs(toggle.Password))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" alt=\"show/hide\"></div><input")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("post", Toggle{Password: toggle.Password, ConfirmPass: "show"}, false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, typeAttrs("show"))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"passwordConfirm\" id=\"passwordConfirm\" hx-swap=\"multi:#swap2:outerHTML,#submit3:outerHTML\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var37 string
+			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(values.PasswordConfirm)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 625, Col: 33}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" required hx-indicator=\"#loading\" hx-sync=\"closest form:drop\"><div id=\"showConfirm\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, hxAttrs("toggle", Toggle{Password: toggle.Password, ConfirmPass: "show"}, false))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" hx-swap=\"multi:#passwordConfirm:outerHTML,#showConfirm:outerHTML,#password:outerHTML,#show:outerHTML\" class=\"z-[2222] cursor-pointer size-4 absolute right-3 top-2\" hx-trigger=\"click\"><img")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, srcAttrs("show"))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" alt=\"show/hide\"></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		if !templ_7745c5c3_IsBuffer {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
+func Page4Full(data RegisterPageData) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+		if !templ_7745c5c3_IsBuffer {
+			templ_7745c5c3_Buffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var38 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var38 == nil {
+			templ_7745c5c3_Var38 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Var39 := templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+			if !templ_7745c5c3_IsBuffer {
+				templ_7745c5c3_Buffer = templ.GetBuffer()
+				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"container\" class=\"w-full justify-center\"><div class=\"mt-10 lg:mt-20\"><img src=\"assets/favicon_light/android-chrome-512x512.png\" alt=\"Light Logo\" class=\"max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain\" x-show=\"theme === &#39;dark&#39;\"> <img src=\"assets/favicon_dark/android-chrome-512x512.png\" alt=\"Dark Logo\" class=\"max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain\" x-show=\"theme === &#39;light&#39;\"><div id=\"register-card\" class=\"max-w-sm sm:max-w-lg mx-auto sm:border sm:rounded-md sm:shadow-sm py-12 px-6 flex flex-col gap-8\"><h2 class=\"text-center text-2xl font-medium\">Signup</h2>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = Page4(&data.FormValues, data.FormErrors).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if !templ_7745c5c3_IsBuffer {
+				_, templ_7745c5c3_Err = io.Copy(templ_7745c5c3_W, templ_7745c5c3_Buffer)
+			}
+			return templ_7745c5c3_Err
+		})
+		templ_7745c5c3_Err = layouts.App().Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var22 string
-		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(email)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 321, Col: 110}
+		if !templ_7745c5c3_IsBuffer {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+		return templ_7745c5c3_Err
+	})
+}
+
+func Page4(values *RegisterFormValues, errors v.Errors) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+		if !templ_7745c5c3_IsBuffer {
+			templ_7745c5c3_Buffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var40 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var40 == nil {
+			templ_7745c5c3_Var40 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<form")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div>")
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, htmxAttrs("post", fmt.Sprintf("/signup?id=%s", values.Uuid)))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" class=\"slide-transition flex flex-col gap-4\" hx-target=\"#container\" hx-swap=\"outerHTML transition:true\" hx-indicator=\".progress\" enctype=\"multipart/form-data\"><div class=\"w-40 h-40 mx-auto border-4 rounded-full shadow-md overflow-hidden items-center\"><div id=\"image-preview\" class=\"w-full h-full rounded-full flex items-center justify-center text-center overflow-hidden\"><input id=\"upload\" type=\"file\" name=\"profilePic\" class=\"hidden\" accept=\"image/*\" onchange=\"showImageModal(event)\"> <label for=\"upload\" class=\"size-full flex items-center justify-center rounded-full cursor-pointer hover:opacity-50 transition-opacity duration-200\"><img id=\"profile-image\" name=\"profile-image\" class=\"w-full h-full object-cover\" src=\"assets/icons/blank-user-profile.png\" alt=\"Profile Image\"></label></div></div><div id=\"swap\"><div class=\"input-group flex flex-col gap-1\"><input hx-post=\"/registration?check=username\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(errors.Has("username")))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"username\" id=\"username\" hx-swap=\"multi:#swap:outerHTML,#submit4:outerHTML\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var41 string
+		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(values.Username)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 696, Col: 28}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" autocomplete=\"username\" hx-indicator=\"#loading\" required hx-sync=\"closest form:abort\"> <label for=\"username\">Username </label><div id=\"loading\" class=\"htmx-indicator absolute right-3 top-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.Loading().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if errors.Has("username") {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"text-red-500 text-xs\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var42 string
+			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(errors.Get("username")[0])
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 710, Col: 65}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><input type=\"hidden\" name=\"croppedImageData\" id=\"croppedImageData\" class=\"\"> <button id=\"submit4\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs(true, "submit4"))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Signup</button></form><div id=\"image-modal\" class=\"hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-[2222] pointer-events-auto\"><div class=\"bg-white p-6 rounded-lg w-full max-w-md mx-auto relative flex justify-center items-center flex-col\"><button onclick=\"closeModal()\" class=\"absolute top-4 right-4 text-gray-500 hover:text-gray-700 size-4\"><img src=\"assets/icons/close.png\" alt=\"\"></button><h2 class=\"text-center text-xl text-primary-foreground font-semibold mb-4\">Edit Profile Picture</h2><!-- Cropper Container with Circular Mask --><div id=\"crop-container\" class=\"border-2 w-48 h-48 rounded-lg bg-white overflow-hidden\"><img id=\"crop-image\" class=\"w-full h-full\" src=\"\" alt=\"Crop Image\"></div><div class=\"flex items-center justify-between my-4\"><label for=\"rotate-range\" class=\"text-sm text-gray-600\">Rotate:</label> <input type=\"range\" id=\"rotate-range\" min=\"0\" max=\"180\" step=\"1\" value=\"0\" class=\"w-full ml-4\" onchange=\"setRotate()\"></div><div class=\"flex justify-between\"><button id=\"save\" class=\"bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600\" onclick=\"cropImage()\">Save</button></div></div></div><script id=\"modal-js\">\n\t\tlet cropper;\n\t\tvar croppable = false;\n\t\tfunction getRoundedCanvas(sourceCanvas) {\n      var canvas = document.createElement('canvas');\n      var context = canvas.getContext('2d');\n      var width = sourceCanvas.width;\n      var height = sourceCanvas.height;\n\n      canvas.width = width;\n      canvas.height = height;\n      context.imageSmoothingEnabled = true;\n      context.drawImage(sourceCanvas, 0, 0, width, height);\n      context.globalCompositeOperation = 'destination-in';\n      context.beginPath();\n      context.arc(width / 2, height / 2, Math.min(width, height) / 2, 0, 2 * Math.PI, true);\n      context.fill();\n      return canvas;\n    }\n\n\t\tfunction showImageModal(event) {\n\t\t\t\tconst file = event.target.files[0];\n\t\t\t\tif (file) {\n\t\t\t\t\t\tconst reader = new FileReader();\n\t\t\t\t\t\treader.onload = function(e) {\n\t\t\t\t\t\t\t\tconst img = document.getElementById('crop-image');\n\t\t\t\t\t\t\t\timg.src = e.target.result;\n\t\t\t\t\t\t\t\tdocument.getElementById('image-modal').classList.remove('hidden');\n\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\tcropper = new Cropper(img, {\n\t\t\t\t\t\t\t\t\t\tdragMode: 'move',\n\t\t\t\t\t\t\t\t\t\taspectRatio: 1,\n\t\t\t\t\t\t\t\t\t\tviewMode: 1,\n\t\t\t\t\t\t\t\t\t\tresponsive: true,\n\t\t\t\t\t\t\t\t\t\trestore: false,\n\t\t\t\t\t\t\t\t\t\tguides: false,\n\t\t\t\t\t\t\t\t\t\tcenter: false,\n\t\t\t\t\t\t\t\t\t\thighlight: false,\n\t\t\t\t\t\t\t\t\t\tcropBoxMovable: false,\n\t\t\t\t\t\t\t\t\t\tcropBoxResizable: false,\n\t\t\t\t\t\t\t\t\t\ttoggleDragModeOnDblclick: false,\n\t\t\t\t\t\t\t\t\t\tminContainerWidth:160,\n\t\t\t\t\t\t\t\t\t\tminContainerHeight:160,\n\t\t\t\t\t\t\t\t\t\tminCanvasWidth:160,\n\t\t\t\t\t\t\t\t\t\tminCanvasHeight:160,\n\t\t\t\t\t\t\t\t\t\tminCropBoxWidth:160,\n\t\t\t\t\t\t\t\t\t\tminCropBoxHeight:160,\n\t\t\t\t\t\t\t\t\t\tready: function () {\n\t\t\t\t\t\t\t\t\t\t\tcroppable = true;\n\t\t\t\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t};\n\t\t\t\t\t\treader.readAsDataURL(file);\n\t\t\t\t}\n\t\t}\n\n\t\tfunction setRotate() {\n\t\t\tconst rotateValue = document.getElementById('rotate-range').value;\n\t\t\tcropper.rotateTo(rotateValue);\n\t\t}\n\t\tfunction closeModal() {\n    \tconst modal=document.getElementById('image-modal')\n\t\t\tif (modal){\n\t\t\t\tmodal.classList.add('hidden');\n\t\t\t}\n\n    \tif (cropper) {\n        cropper.destroy();\n\t\t\t\tcropper=null;\n    \t}\n\t\t\tdocument.getElementById('upload').value='';\n\t\t}\n\t\tvar croppedImageURL\n\n\n\t\tfunction cropImage() {\n    \tif (cropper && croppable) {\n        const canvas = cropper.getCroppedCanvas({\n            width: 400,\n            height: 400,\n            imageSmoothingQuality: 'high'\n        });\n\t\t\t\troundedCanvas= getRoundedCanvas(canvas)\n        roundedCanvas.toBlob((blob) => {\n            const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });\n\n\t\t\t\t\t\t\n\t\t\t\t\t\t// const formData = new FormData();\n            // formData.append('croppedImage', blob, 'cropped-image.jpg');\n\n\t\t\t\t\t\t// Convert file to base64 string\n            const reader = new FileReader();\n            reader.onloadend = function() {\n                const base64data = reader.result.split(',')[1]; // Get base64 string without the prefix\n                document.getElementById('croppedImageData').value = base64data;\n\t\t\t\t\t\t};\n\t\t\t\t\t\treader.readAsDataURL(file);\n                //console.log('Success:', result);\n\t\t\t\t\t\tcroppedImageURL = URL.createObjectURL(file);\n            document.getElementById('profile-image').src = croppedImageURL;\n\t\t\t\t\t\tif (document.getElementById('username').value != \"\"){\n\t\t\t\t\t\t\tdocument.getElementById('submit4').classList.remove(\"pointer-events-none\")\n\t\t\t\t\t\t}\n            closeModal(); // Close the modal after successful upload\n        }, 'image/jpeg');\n\t\t\t\t//URL.revokeObjectURL(croppedImageURL);\n\t\t\t\tcloseModal();\n    \t}\n\t\t}\n\t</script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if !templ_7745c5c3_IsBuffer {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
+func Username(values *RegisterFormValues, errors v.Errors) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+		if !templ_7745c5c3_IsBuffer {
+			templ_7745c5c3_Buffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var43 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var43 == nil {
+			templ_7745c5c3_Var43 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"swap\"><div class=\"input-group flex flex-col gap-1\"><input hx-post=\"/registration?check=username\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, inputAttrs(errors.Has("username")))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" name=\"username\" id=\"username\" hx-swap=\"multi:#swap:outerHTML,#submit4:outerHTML\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var44 string
+		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(values.Username)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 858, Col: 27}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" autocomplete=\"username\" hx-indicator=\"#loading\" hx-sync=\"closest form:abort\"> <label for=\"username\">Username </label><div id=\"loading\" class=\"htmx-indicator absolute right-3 top-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.Loading().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if errors.Has("username") {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"text-red-500 text-xs\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var45 string
+			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(errors.Get("username")[0])
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `app/templates/pages/register.templ`, Line: 871, Col: 64}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if errors.Has("username") || errors.Has("imageNotFound") {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<button id=\"submit4\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs(true, "submit4"))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Signup</button>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<button id=\"submit4\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs(false, "submit4"))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Signup</button>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		if !templ_7745c5c3_IsBuffer {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
+func Button(errors v.Errors) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+		if !templ_7745c5c3_IsBuffer {
+			templ_7745c5c3_Buffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var46 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var46 == nil {
+			templ_7745c5c3_Var46 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<button id=\"submit4\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, buttonAttrs(errors.Has("imageNotFound"), "submit4"))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">Signup</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

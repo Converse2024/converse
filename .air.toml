@@ -2,8 +2,8 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-  bin = "./converse"
-  cmd = "templ generate && go build -tags netgo -ldflags '-s -w'"
+  bin = "./cmd/server/server"
+  cmd = "templ generate && go build -C cmd/server"
   delay = 1000
   exclude_dir = ["tmp", "vendor"]
   exclude_file = []

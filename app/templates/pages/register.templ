@@ -1,9 +1,10 @@
 package pages
 
 import (
+	"fmt"
 	"github.com/Sourjaya/converse/app/templates/layouts"
 	v "github.com/Sourjaya/converse/app/validate"
-	"github.com/Sourjaya/converse/app/templates/errorComponent"
+	"github.com/Sourjaya/converse/app/templates/components"
 )
 
 type RegisterPageData struct {
@@ -15,287 +16,453 @@ type RegisterFormValues struct {
 	Email           string `form:"email"`
 	FirstName       string `form:"firstName"`
 	LastName        string `form:"lastName"`
-	Password        string `form:"password"`
+	Username        string `json:"username" form:"username"`
+	ProfilePic      string `json:"profilePic" form:"profilePic"`
+	Password        string `json:"password" form:"password"`
 	PasswordConfirm string `form:"passwordConfirm"`
+	Uuid            string
+}
+
+type Toggle struct {
+	Password    string
+	ConfirmPass string
 }
 
 templ Register(data RegisterPageData) {
 	@layouts.App() {
-		<div class="w-full justify-center">
+		<div id="container" class="w-full justify-center">
 			<div class="mt-10 lg:mt-20">
 				<img
-					src="public/assets/favicon_light/android-chrome-192x192.png"
+					src="assets/favicon_light/android-chrome-512x512.png"
 					alt="Light Logo"
 					class="max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain"
 					x-show="theme === 'dark'"
 				/>
 				<img
-					src="public/assets/favicon_dark/android-chrome-192x192.png"
+					src="assets/favicon_dark/android-chrome-512x512.png"
 					alt="Dark Logo"
 					class="max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain"
 					x-show="theme === 'light'"
 				/>
-				<div id="register-card" class="max-w-sm mx-auto sm:border sm:rounded-md sm:shadow-sm py-12 px-6 flex flex-col gap-8">
+				<div id="register-card" class="max-w-sm sm:max-w-lg mx-auto sm:border sm:rounded-md sm:shadow-sm py-12 px-6 flex flex-col gap-8">
 					<h2 class="text-center text-2xl font-medium">Signup</h2>
-					@RegisterForm(data.FormValues, data.FormErrors)
+					@RegisterForm(&data.FormValues, data.FormErrors)
 				</div>
 			</div>
 		</div>
 	}
 }
 
-templ RegisterForm(values RegisterFormValues, errors v.Errors) {
-	<form id="registrationform" hx-post="/registration?page=1" class="slide-transition flex flex-col gap-4" hx-swap="outerHTML transition:true" hx-indicator=".progress">
+templ RegisterForm(values *RegisterFormValues, errors v.Errors) {
+	<form id="registrationform" hx-post="/registration?page=1" class="slide-transition flex flex-col gap-4" hx-swap="outerHTML transition:true" hx-indicator=".progress" hx-target="body">
 		<div id="swap">
-			<div hx-target="#swap" hx-swap="outerHTML" class="input-group flex flex-col gap-1">
+			<div class="input-group flex flex-col gap-1 relative">
 				<input
 					hx-post="/registration?check=email"
 					{ inputAttrs(errors.Has("email"))... }
 					name="email"
 					id="email"
+					hx-swap="multi:#swap:outerHTML,#submit1:outerHTML"
 					value={ values.Email }
 					required
 					autocomplete="email"
+					hx-indicator="#loading"
+					hx-sync="closest form:drop"
 				/>
 				<label
 					for="email"
 				>Email </label>
+				<div id="loading" class="htmx-indicator absolute right-3 top-2">
+					@components.Loading()
+				</div>
 			</div>
 			if errors.Has("email") {
 				<div class="text-red-500 text-xs">{ errors.Get("email")[0] }</div>
 			}
 		</div>
-		<button id="submit1" disabled { buttonAttrs("submit1")... }>
-			Signup
+		<button id="submit1" { buttonAttrs(true,"submit1")... }>
+			Send OTP
 		</button>
 		<div class="flex flex-row items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500">
 			<p>Already have an account?</p> <a class="flex flex-row items-center text-blue-600" href="/login" target="" rel="noopener noreferrer">Login</a>
 		</div>
 	</form>
-	<script>
-		function checkErrors() {
-			let hasErrors = false;
-			const errorElements = document.querySelectorAll('.text-red-500.text-xs');
-			const emailInput = document.getElementById('email').value;
-			errorElements.forEach((errorElement) => {
-				if (errorElement.innerText.trim() !== '' || emailInput=="") {
-					hasErrors = true;
-				}
-			});
-			
-			const submitButton = document.getElementById('submit1');
-			submitButton.disabled = hasErrors;
-		}
-
-		//Run checkErrors after any HTMX request to set the correct state after updates
-		const afterRequestListener = (event) => {
-  		checkErrors();
-		};
-		document.addEventListener('htmx:afterRequest', afterRequestListener);
-		function removeAfterRequestListener() {
-  		document.removeEventListener('htmx:afterRequest', afterRequestListener);
-  		//console.log('htmx:afterRequest listener removed');
-		}
-	</script>
 }
 
-templ Otp(err error) {
-	if err!=nil {
-		@errorComponent.Error500Component()
-	} else {
-		<div hx-target="this" class="slide-transition" hx-swap="outerHTML transition:true">
-			<header class="flex flex-col items-center justify-center text-8xl">
-				<i class="bx bx-check-shield"></i>
-			</header>
-			<div class="flex flex-row items-center justify-center text-sm font-medium text-inherit p-4">
-				<p>We have sent a code to your email</p>
+templ OtpPage(values *RegisterFormValues) {
+	@layouts.App() {
+		<div id="container" class="w-full justify-center">
+			<div class="mt-10 lg:mt-20">
+				<img
+					src="assets/favicon_light/android-chrome-512x512.png"
+					alt="Light Logo"
+					class="max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain"
+					x-show="theme === 'dark'"
+				/>
+				<img
+					src="assets/favicon_dark/android-chrome-512x512.png"
+					alt="Dark Logo"
+					class="max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain"
+					x-show="theme === 'light'"
+				/>
+				<div id="register-card" class="max-w-sm sm:max-w-lg mx-auto sm:border sm:rounded-md sm:shadow-sm py-12 px-6 flex flex-col gap-8">
+					<h2 class="text-center text-2xl font-medium">Signup</h2>
+					@Otp(values)
+				</div>
 			</div>
-			<form hx-post="/registration?page=2" class="flex flex-col gap-4" hx-indicator=".progress">
-				<div class="flex flex-col space-y-16">
-					<div class="flex flex-row items-center justify-between mx-auto w-full max-w-xs">
-						<input name="otp1" maxlength="1" class="w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700" type="text" name="" id=""/>
-						<input name="otp2" maxlength="1" disabled class="w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700" type="text" name="" id=""/>
-						<input name="otp3" maxlength="1" disabled class="w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700" type="text" name="" id=""/>
-						<input name="otp4" maxlength="1" disabled class="w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700" type="text" name="" id=""/>
+		</div>
+	}
+}
+
+templ Otp(values *RegisterFormValues) {
+	<div hx-target="this" class="slide-transition" hx-swap="outerHTML transition:true">
+		<header class="flex flex-col items-center justify-center text-8xl">
+			<i class="bx bx-check-shield"></i>
+		</header>
+		<div class="flex flex-row items-center justify-center text-sm font-medium text-inherit p-4">
+			<p>We have sent a code to your email</p>
+		</div>
+		<form { htmxAttrs("post",fmt.Sprintf("/registration?page=2&id=%s",values.Uuid))... } class="flex flex-col gap-4" hx-indicator=".progress">
+			<div class="flex flex-col space-y-16">
+				<div class="flex flex-row items-center justify-between mx-auto w-full max-w-xs">
+					<input required name="otp1" maxlength="1" class="w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700" type="text" name="" id=""/>
+					<input required name="otp2" maxlength="1" disabled class="w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700" type="text" name="" id=""/>
+					<input required name="otp3" maxlength="1" disabled class="w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700" type="text" name="" id=""/>
+					<input required name="otp4" maxlength="1" disabled class="w-16 h-16 py-0.5 flex flex-col items-center justify-center text-center px-5 outline-none rounded-2xl border-2 border-solid text-lg bg-inherit focus:border-cyan-300 focus:ring-1 ring-blue-700" type="text" name="" id=""/>
+				</div>
+				<div class="flex flex-col space-y-5">
+					<div class="flex flex-col items-center justify-center">
+						<button id="submit2" { buttonAttrs(false,"submit2")... }>
+							Enter OTP
+						</button>
 					</div>
-					<div class="flex flex-col space-y-5">
-						<div class="flex flex-col items-center justify-center">
-							<button id="submit2" { buttonAttrs("submit2")... }>
-								Enter OTP
-							</button>
-						</div>
-						<div class="flex flex-row items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500">
-							<p>Didn't recieve code?</p> <a hx-post="/registration?check=resendOTP" hx-target="#resend" hx-indicator=".progress" hx-swap="outerHTML" id="resend" class="pointer-events-none cursor-default flex flex-row items-center text-blue-600" rel="noopener noreferrer">Resend in<span class="flex flex-row items-center text-blue-600 ml-1" id="countdown" style="display: none;"></span></a>
-						</div>
+					<div class="flex flex-row items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500">
+						<p>Didn't recieve code?</p> <a { htmxAttrs("post",fmt.Sprintf("/registration?check=resendOTP&id=%s",values.Uuid))... } hx-target="#resend" hx-indicator=".progress" hx-swap="outerHTML" id="resend" class="pointer-events-none cursor-default flex flex-row items-center text-blue-600" rel="noopener noreferrer">Resend in<span class="flex flex-row items-center text-blue-600 ml-1" id="countdown" style="display: none;"></span></a>
 					</div>
 				</div>
-			</form>
-		</div>
-		<script>
-	removeAfterRequestListener()
-	 const inputs = document.querySelectorAll("input"),
-  button = document.querySelector("button");
-
-// iterate over all inputs
-inputs.forEach((input, index1) => {
-  input.addEventListener("keyup", (e) => {
-    // This code gets the current input element and stores it in the currentInput variable
-    // This code gets the next sibling element of the current input element and stores it in the nextInput variable
-    // This code gets the previous sibling element of the current input element and stores it in the prevInput variable
-    const currentInput = input,
-      nextInput = input.nextElementSibling,
-      prevInput = input.previousElementSibling;
-    // if the next input is disabled and the current value is not empty
-    //  enable the next input and focus on it
-    if (nextInput && nextInput.hasAttribute("disabled") && currentInput.value !== "") {
-      nextInput.removeAttribute("disabled");
-      nextInput.focus();
-    }
-
-    // if the backspace key is pressed
-    if (e.key === "Backspace") {
-      // iterate over all inputs again
-      inputs.forEach((input, index2) => {
-        // if the index1 of the current input is less than or equal to the index2 of the input in the outer loop
-        // and the previous element exists, set the disabled attribute on the input and focus on the previous element
-        if (index1 <= index2 && prevInput) {
-          input.setAttribute("disabled", true);
-          input.value = "";
-          prevInput.focus();
-        }
-      });
-    }
-    //if the fourth input( which index number is 3) is not empty and has not disable attribute then
-    //add active class if not then remove the active class.
-    if (!inputs[3].disabled && inputs[3].value !== "") {
-      button.classList.remove("pointer-events-none");
-			button.innerText="Verify OTP"
-      return;
-    }
-		button.innerText="Enter OTP"
-    button.classList.add("pointer-events-none");
-  });
-});
-let countdownTimer;
-function startCountdown(duration) {
-			//console.log("timer started")
-      var timer = duration, minutes, seconds;
-      var countdown = document.getElementById("countdown");
-      countdown.style.display = "inline-block"; // Display countdown
-
-			clearInterval(countdownTimer);
-			// window.addEventListener('htmx:afterSettle',()=>{
-			// 	clearInterval(countdownTimer);
-			// });
-     countdownTimer =  setInterval(function () {
-        minutes = parseInt(timer / 60, 10);
-        seconds = parseInt(timer % 60, 10);
-        minutes = minutes < 10 ? "0" + minutes : minutes;
-        seconds = seconds < 10 ? "0" + seconds : seconds;
-        countdown.textContent = minutes + ":" + seconds;
-        countdown.textContent = minutes + ":" + seconds;
-				//console.log(timer)
-        if (--timer < 0) {
-          clearInterval(countdownTimer);
-				  var resend = document.getElementById("resend");
-					resend.classList.remove("pointer-events-none", "cursor-default");
-					resend.classList.add("pointer-events-auto", "cursor-pointer");
-					resend.textContent="Resend"
-          countdown.style.display = "none";
-        }
-      }, 1000);
-    }
-		const otpRequestListener=()=>{
-			inputs[0].focus();
-			startCountdown(120);
-		} 
-//focus the first input which index is 0 on window load
-		window.addEventListener("htmx:afterSettle", otpRequestListener);
-		function removeOTPRequestListener() {
-  		window.removeEventListener('htmx:afterSettle', otpRequestListener);
-			clearInterval(countdownTimer)
-  		//console.log('htmx:afterSettle listener removed');
-		}
-	</script>
-	}
-}
-
-templ Details(err error) {
-	if err!=nil {
-		@errorComponent.Error500Component()
-	} else {
-		<div class="slide-transition">
-			Hello
-		</div>
-	}
+			</div>
+		</form>
+	</div>
 	<script>
-	removeOTPRequestListener();
-	</script>
+	 		const inputs = document.querySelectorAll("input"),
+  		button = document.querySelector("button");
+
+			// iterate over all inputs
+			inputs.forEach((input, index1) => {
+			input.addEventListener("keyup", (e) => {
+				const currentInput = input,
+					nextInput = input.nextElementSibling,
+					prevInput = input.previousElementSibling;
+				// if the next input is disabled and the current value is not empty
+				//  enable the next input and focus on it
+				if (nextInput && nextInput.hasAttribute("disabled") && currentInput.value !== "") {
+					nextInput.removeAttribute("disabled");
+					nextInput.focus();
+				}
+
+				// if the backspace key is pressed
+				if (e.key === "Backspace") {
+					// iterate over all inputs again
+					inputs.forEach((input, index2) => {
+						if (index1 <= index2 && prevInput) {
+							input.setAttribute("disabled", true);
+							input.value = "";
+							prevInput.focus();
+						}
+					});
+				}
+				//if the fourth input( which index number is 3) is not empty and has not disable attribute then
+				//add active class if not then remove the active class.
+				if (!inputs[3].disabled && inputs[3].value !== "") {
+					button.classList.remove("pointer-events-none");
+					button.innerText="Verify OTP"
+					return;
+				}
+				button.innerText="Enter OTP"
+				button.classList.add("pointer-events-none");
+			});
+			});
+			let countdownTimer;
+			function startCountdown(duration) {
+					//console.log("timer started")
+					var timer = duration, minutes, seconds;
+					var countdown = document.getElementById("countdown");
+					countdown.style.display = "inline-block"; // Display countdown
+
+					clearInterval(countdownTimer);
+					// window.addEventListener('htmx:afterSettle',()=>{
+					// 	clearInterval(countdownTimer);
+					// });
+				countdownTimer =  setInterval(function () {
+						minutes = parseInt(timer / 60, 10);
+						seconds = parseInt(timer % 60, 10);
+						minutes = minutes < 10 ? "0" + minutes : minutes;
+						seconds = seconds < 10 ? "0" + seconds : seconds;
+						countdown.textContent = minutes + ":" + seconds;
+						//console.log(timer)
+						if (--timer < 0) {
+							clearInterval(countdownTimer);
+							var resend = document.getElementById("resend");
+							resend.classList.remove("pointer-events-none", "cursor-default");
+							resend.classList.add("pointer-events-auto", "cursor-pointer");
+							resend.textContent="Resend"
+							countdown.style.display = "none";
+						}
+					}, 1000);
+				}
+				const otpRequestListener=()=>{
+					inputs[0].focus();
+					startCountdown(120);
+				} 
+				//focus the first input which index is 0 on window load
+				window.addEventListener("DOMContentLoaded", otpRequestListener);
+				function removeOTPRequestListener() {
+					window.removeEventListener('htmx:afterSettle', otpRequestListener);
+					clearInterval(countdownTimer)
+				}
+		</script>
 }
 
-templ EmailInput(values RegisterFormValues, errors v.Errors) {
+templ EmailInput(values *RegisterFormValues, errors v.Errors) {
 	<div id="swap">
-		<div hx-target="#swap" hx-swap="outerHTML" class="input-group flex flex-col gap-1">
+		<div class="input-group flex flex-col gap-1">
 			<input
 				hx-post="/registration?check=email"
 				{ inputAttrs(errors.Has("email"))... }
 				name="email"
 				id="email"
+				hx-swap="multi:#swap:outerHTML,#submit1:outerHTML"
 				value={ values.Email }
-				required
 				autocomplete="email"
+				hx-indicator="#loading"
+				required
+				hx-sync="closest form:abort"
 			/>
 			<label
 				for="email"
 			>Email </label>
+			<div id="loading" class="htmx-indicator absolute right-3 top-2">
+				@components.Loading()
+			</div>
 		</div>
 		if errors.Has("email") {
 			<div class="text-red-500 text-xs">{ errors.Get("email")[0] }</div>
 		}
 	</div>
+	<button id="submit1" { buttonAttrs(errors.Has("email"),"submit1")... }>
+		Send OTP
+	</button>
 }
 
-templ Resend() {
-	<a hx-post="/registration?check=resendOTP" hx-target="#resend" hx-swap="outerHTML" hx-indicator=".progress" id="resend" class="pointer-events-none cursor-default flex flex-row items-center text-blue-600" rel="noopener noreferrer">Resend in <span class="flex flex-row items-center text-blue-600 ml-1" id="countdown" style="display: none;"></span></a>
+templ Resend(values *RegisterFormValues) {
+	<a { htmxAttrs("post",fmt.Sprintf("/registration?check=resendOTP&id=%s",values.Uuid))... } hx-target="#resend" hx-swap="outerHTML" hx-indicator=".progress" id="resend" class="pointer-events-none cursor-default flex flex-row items-center text-blue-600" rel="noopener noreferrer">Resend in <span class="flex flex-row items-center text-blue-600 ml-1" id="countdown" style="display: none;"></span></a>
 }
 
-templ SignupForm(values RegisterFormValues, errors v.Errors) {
-	<form hx-post="/signup" class="flex flex-col gap-4">
-		<div class="flex flex-col gap-1">
-			<label
-				for="email"
-				{ labelAttrs(errors.Has("email"))... }
-			>Email *</label>
-			<input { inputAttrs(errors.Has("email"))... } name="email" id="email" value={ values.Email }/>
-			if errors.Has("email") {
-				<div class="text-red-500 text-xs">{ errors.Get("email")[0] }</div>
-			}
+templ DetailsForm(values *RegisterFormValues, errors v.Errors, toggle Toggle) {
+	<form
+		{ htmxAttrs("post",fmt.Sprintf("/registration?page=3&id=%s",values.Uuid))... }
+		class="slide-transition flex flex-col gap-4"
+		hx-swap="outerHTML transition:true"
+		hx-indicator=".progress"
+	>
+		<div id="swap1">
+			<div class="flex flex-col sm:flex-row gap-2">
+				<div class="input-group flex flex-col gap-1 relative">
+					<input
+						{ htmxAttrs("post",fmt.Sprintf("/registration?check=details&id=%s",values.Uuid))... }
+						{ inputAttrs(errors.Has("firstName"))... }
+						name="firstName"
+						id="firstName"
+						hx-swap="multi:#swap1:outerHTML,#submit3:outerHTML"
+						value={ values.FirstName }
+						required
+						autocomplete="firstName"
+						hx-indicator="#loading"
+						hx-sync="closest form:abort"
+					/>
+					<label for="firstName">First Name</label>
+					<div id="loading" class="htmx-indicator absolute right-3 top-2">
+						@components.Loading()
+					</div>
+				</div>
+				if errors.Has("firstName") {
+					<ul class="list-disc ml-4">
+						for _, err := range errors.Get("firstName") {
+							<li class="text-red-500 text-xs">{ err }</li>
+						}
+					</ul>
+				}
+				<div class="input-group flex flex-col gap-1 relative">
+					<input
+						{ htmxAttrs("post",fmt.Sprintf("/registration?check=details&id=%s",values.Uuid))... }
+						hx-swap="multi:#swap1:outerHTML,#submit3:outerHTML"
+						{ inputAttrs(errors.Has("lastName"))... }
+						name="lastName"
+						id="lastName"
+						value={ values.LastName }
+						required
+						autocomplete="email"
+						hx-indicator="#loading"
+						hx-sync="closest form:abort"
+					/>
+					<label for="lastName">Last Name</label>
+					<div id="loading" class="htmx-indicator absolute right-3 top-2">
+						@components.Loading()
+					</div>
+				</div>
+				if errors.Has("lastName") {
+					<ul class="list-disc ml-4">
+						for _, err := range errors.Get("lastName") {
+							<li class="text-red-500 text-xs">{ err }</li>
+						}
+					</ul>
+				}
+			</div>
 		</div>
-		<div class="flex flex-col gap-1">
-			<label for="firstName">First Name *</label>
-			<input { inputAttrs(errors.Has("firstName"))... } name="firstName" id="firstName" value={ values.FirstName }/>
-			if errors.Has("firstName") {
-				<ul class="list-disc ml-4">
-					for _, err := range errors.Get("firstName") {
-						<li class="text-red-500 text-xs">{ err }</li>
-					}
-				</ul>
-			}
+		@PasswordInput(values, errors, toggle)
+	</form>
+	<script>
+			removeOTPRequestListener();
+	</script>
+}
+
+templ DetailsInput(values *RegisterFormValues, errors v.Errors) {
+	<div id="swap1">
+		<div class="flex flex-col sm:flex-row gap-2">
+			<div class="flex flex-col">
+				<div class="input-group flex flex-col gap-1 relative">
+					<input
+						{ htmxAttrs("post",fmt.Sprintf("/registration?check=details&id=%s",values.Uuid))... }
+						{ inputAttrs(errors.Has("firstName"))... }
+						name="firstName"
+						id="firstName"
+						hx-swap="multi:#swap1:outerHTML,#submit3:outerHTML"
+						value={ values.FirstName }
+						required
+						autocomplete="firstname"
+						hx-indicator="#loading"
+						hx-sync="closest form:abort"
+					/>
+					<label for="firstName">First Name</label>
+					<div id="loading" class="htmx-indicator absolute right-3 top-2">
+						@components.Loading()
+					</div>
+				</div>
+				if errors.Has("firstName") {
+					<ul class="list-disc ml-4">
+						for _, err := range errors.Get("firstName") {
+							<li class="text-red-500 text-xs">{ err }</li>
+						}
+					</ul>
+				}
+			</div>
+			<div class="flex flex-col">
+				<div class="input-group flex flex-col gap-1 relative">
+					<input
+						{ htmxAttrs("post",fmt.Sprintf("/registration?check=details&id=%s",values.Uuid))... }
+						hx-swap="multi:#swap1:outerHTML,#submit3:outerHTML"
+						{ inputAttrs(errors.Has("lastName"))... }
+						name="lastName"
+						id="lastName"
+						value={ values.LastName }
+						required
+						autocomplete="email"
+						hx-indicator="#loading"
+						hx-sync="closest form:abort"
+					/>
+					<label for="lastName">Last Name</label>
+					<div id="loading" class="htmx-indicator absolute right-3 top-2">
+						@components.Loading()
+					</div>
+				</div>
+				if errors.Has("lastName") {
+					<ul class="lsit-disc ml-4">
+						for _, err := range errors.Get("lastName") {
+							<li class="text-red-500 text-xs">{ err }</li>
+						}
+					</ul>
+				}
+			</div>
 		</div>
-		<div class="flex flex-col gap-1">
-			<label for="lastName">Last Name *</label>
-			<input { inputAttrs(errors.Has("lastName"))... } name="lastName" id="lastName" value={ values.LastName }/>
-			if errors.Has("lastName") {
-				<ul class="lsit-disc ml-4">
-					for _, err := range errors.Get("lastName") {
-						<li class="text-red-500 text-xs">{ err }</li>
-					}
-				</ul>
-			}
-		</div>
-		<div class="flex flex-col gap-1">
-			<label for="password">Password *</label>
-			<input { inputAttrs(errors.Has("password"))... } type="password" name="password" id="password"/>
+	</div>
+	<button id="submit3" { buttonAttrs(errors.Any(),"submit3")... }>
+		Next
+	</button>
+}
+
+func typeAttrs(toggle string) templ.Attributes {
+	var t string
+	if toggle == "show" {
+		t = "password"
+	} else {
+		t = "text"
+	}
+	return templ.Attributes{
+		"type": t,
+	}
+}
+func srcAttrs(toggle string) templ.Attributes {
+	var src string
+	if toggle == "show" {
+		src = "/assets/icons/eye.png"
+	} else {
+		src = "/assets/icons/hide.png"
+	}
+	return templ.Attributes{
+		"src": src,
+	}
+}
+
+func htmxAttrs(postfix, uri string) templ.Attributes {
+	if postfix == "post" {
+		return templ.Attributes{
+			"hx-post": uri,
+		}
+	} else {
+		return templ.Attributes{
+			"hx-get": uri,
+		}
+	}
+}
+
+func hxAttrs(method string, toggle Toggle, isPass bool) templ.Attributes {
+	if method == "post" {
+		return templ.Attributes{
+			"hx-post": fmt.Sprintf("/registration?check=password&toggleP=%s&toggleC=%s", toggle.Password, toggle.ConfirmPass),
+		}
+	}
+	if isPass {
+		return templ.Attributes{
+			"hx-post": fmt.Sprintf("/view?toggleP=%s&toggleC=%s", toggle.Password, toggle.ConfirmPass),
+		}
+	} else {
+		return templ.Attributes{
+			"hx-post": fmt.Sprintf("/viewC?toggleP=%s&toggleC=%s", toggle.Password, toggle.ConfirmPass),
+		}
+	}
+}
+
+templ PasswordInput(values *RegisterFormValues, errors v.Errors, toggle Toggle) {
+	<div id="swap2">
+		<div class="flex flex-col">
+			<div class="input-group flex flex-col gap-1">
+				<input
+					{ hxAttrs("post",toggle,true)... }
+					{ inputAttrs(errors.Has("password"))... }
+					{ typeAttrs(toggle.Password)... }
+					name="password"
+					id="password"
+					hx-swap="multi:#swap2:outerHTML,#submit3:outerHTML"
+					value={ values.Password }
+					required
+					hx-indicator="#loading"
+					hx-sync="closest form:drop"
+				/>
+				<label for="password">Password</label>
+				<div id="show" { hxAttrs("toggle",toggle,true)... } hx-swap="multi:#password:outerHTML,#show:outerHTML,#passwordConfirm:outerHTML,#showConfirm:outerHTML" class="z-[2222] cursor-pointer size-4 absolute right-3 top-2" hx-trigger="click">
+					<img { srcAttrs(toggle.Password)... } alt="show/hide"/>
+				</div>
+			</div>
 			if errors.Has("password") {
 				<ul>
 					for _, err := range errors.Get("password") {
@@ -304,19 +471,419 @@ templ SignupForm(values RegisterFormValues, errors v.Errors) {
 				</ul>
 			}
 		</div>
-		<div class="flex flex-col gap-1">
-			<label for="passwordConfirm">Confirm Password *</label>
-			<input { inputAttrs(errors.Has("passwordConfirm"))... } type="password" name="passwordConfirm" id="passwordConfirm"/>
+		<div class="flex flex-col">
+			<div class="input-group flex flex-col gap-1">
+				<input
+					{ hxAttrs("post",toggle,false)... }
+					{ typeAttrs(toggle.ConfirmPass)... }
+					{ inputAttrs(errors.Has("passwordConfirm"))... }
+					name="passwordConfirm"
+					id="passwordConfirm"
+					value={ values.PasswordConfirm }
+					hx-swap="multi:#swap2:outerHTML,#submit3:outerHTML"
+					required
+					hx-indicator="#loading"
+					hx-sync="closest form:drop"
+				/>
+				<label for="passwordConfirm">Confirm Password</label>
+				<div id="showConfirm" { hxAttrs("toggle",toggle,false)... } hx-swap="multi:#passwordConfirm:outerHTML,#showConfirm:outerHTML,#password:outerHTML,#show:outerHTML" class="z-[2222] cursor-pointer size-4 absolute right-3 top-2" hx-trigger="click">
+					<img { srcAttrs(toggle.ConfirmPass)... } alt="show/hide"/>
+				</div>
+			</div>
 			if errors.Has("passwordConfirm") {
 				<div class="text-red-500 text-xs">{ errors.Get("passwordConfirm")[0] }</div>
 			}
 		</div>
-		<button { buttonAttrs("submit1")... }>
+	</div>
+	<button id="submit3" { buttonAttrs(errors.Any(),"submit3")... }>
+		Next
+	</button>
+}
+
+templ ViewPassword(values *RegisterFormValues, toggle Toggle) {
+	if toggle.Password=="show" {
+		<input
+			{ hxAttrs("post",Toggle{Password:"hide",ConfirmPass:toggle.ConfirmPass},true)... }
+			{ inputAttrs(false)... }
+			{ typeAttrs("hide")... }
+			name="password"
+			id="password"
+			hx-swap="multi:#swap2:outerHTML,#submit3:outerHTML"
+			value={ values.Password }
+			required
+			hx-indicator="#loading"
+			hx-sync="closest form:drop"
+		/>
+		<div id="show" { hxAttrs("toggle",Toggle{Password:"hide",ConfirmPass:toggle.ConfirmPass},true)... } hx-swap="multi:#password:outerHTML,#show:outerHTML,#passwordConfirm:outerHTML,#showConfirm:outerHTML" class="z-[2222] cursor-pointer size-4 absolute right-3 top-2" hx-trigger="click">
+			<img { srcAttrs("hide")... } alt="show/hide"/>
+		</div>
+		<input
+			{ hxAttrs("post",Toggle{Password:"hide",ConfirmPass:toggle.ConfirmPass},false)... }
+			{ typeAttrs(toggle.ConfirmPass)... }
+			{ inputAttrs(false)... }
+			name="passwordConfirm"
+			id="passwordConfirm"
+			value={ values.PasswordConfirm }
+			hx-swap="multi:#swap2:outerHTML,#submit3:outerHTML"
+			required
+			hx-indicator="#loading"
+			hx-sync="closest form:drop"
+		/>
+		<div id="showConfirm" { hxAttrs("toggle",Toggle{Password:"hide",ConfirmPass:toggle.ConfirmPass},false)... } hx-swap="multi:#passwordConfirm:outerHTML,#showConfirm:outerHTML,#password:outerHTML,#show:outerHTML" class="z-[2222] cursor-pointer size-4 absolute right-3 top-2" hx-trigger="click">
+			<img { srcAttrs(toggle.ConfirmPass)... } alt="show/hide"/>
+		</div>
+	} else {
+		<input
+			{ hxAttrs("post",Toggle{Password:"show",ConfirmPass:toggle.ConfirmPass},true)... }
+			{ inputAttrs(false)... }
+			{ typeAttrs("show")... }
+			name="password"
+			id="password"
+			hx-swap="multi:#swap2:outerHTML,#submit3:outerHTML"
+			value={ values.Password }
+			required
+			hx-indicator="#loading"
+			hx-sync="closest form:drop"
+		/>
+		<div id="show" { hxAttrs("toggle",Toggle{Password:"show",ConfirmPass:toggle.ConfirmPass},true)... } hx-swap="multi:#password:outerHTML,#show:outerHTML,#passwordConfirm:outerHTML,#showConfirm:outerHTML" class="z-[2222] cursor-pointer size-4 absolute right-3 top-2" hx-trigger="click">
+			<img { srcAttrs("show")... } alt="show/hide"/>
+		</div>
+		<input
+			{ hxAttrs("post",Toggle{Password:"show",ConfirmPass:toggle.ConfirmPass},false)... }
+			{ typeAttrs(toggle.ConfirmPass)... }
+			{ inputAttrs(false)... }
+			name="passwordConfirm"
+			id="passwordConfirm"
+			value={ values.PasswordConfirm }
+			hx-swap="multi:#swap2:outerHTML,#submit3:outerHTML"
+			required
+			hx-indicator="#loading"
+			hx-sync="closest form:drop"
+		/>
+		<div id="showConfirm" { hxAttrs("toggle",Toggle{Password:"show",ConfirmPass:toggle.ConfirmPass},false)... } hx-swap="multi:#passwordConfirm:outerHTML,#showConfirm:outerHTML,#password:outerHTML,#show:outerHTML" class="z-[2222] cursor-pointer size-4 absolute right-3 top-2" hx-trigger="click">
+			<img { srcAttrs(toggle.ConfirmPass)... } alt="show/hide"/>
+		</div>
+	}
+}
+
+templ ViewConfirmPassword(values *RegisterFormValues, toggle Toggle) {
+	if toggle.ConfirmPass=="show" {
+		<input
+			{ hxAttrs("post",Toggle{Password:toggle.Password,ConfirmPass:"hide"},true)... }
+			{ inputAttrs(false)... }
+			{ typeAttrs(toggle.Password)... }
+			name="password"
+			id="password"
+			hx-swap="multi:#swap2:outerHTML,#submit3:outerHTML"
+			value={ values.Password }
+			required
+			hx-indicator="#loading"
+			hx-sync="closest form:drop"
+		/>
+		<div id="show" { hxAttrs("toggle",Toggle{Password:toggle.Password,ConfirmPass:"hide"},true)... } hx-swap="multi:#password:outerHTML,#show:outerHTML,#passwordConfirm:outerHTML,#showConfirm:outerHTML" class="z-[2222] cursor-pointer size-4 absolute right-3 top-2" hx-trigger="click">
+			<img { srcAttrs(toggle.Password)... } alt="show/hide"/>
+		</div>
+		<input
+			{ hxAttrs("post",Toggle{Password:toggle.Password,ConfirmPass:"hide"},false)... }
+			{ inputAttrs(false)... }
+			{ typeAttrs("hide")... }
+			name="passwordConfirm"
+			id="passwordConfirm"
+			hx-swap="multi:#swap2:outerHTML,#submit3:outerHTML"
+			value={ values.PasswordConfirm }
+			required
+			hx-indicator="#loading"
+			hx-sync="closest form:drop"
+		/>
+		<div id="showConfirm" { hxAttrs("toggle",Toggle{Password:toggle.Password,ConfirmPass:"hide"},false)... } hx-swap="multi:#passwordConfirm:outerHTML,#showConfirm:outerHTML,#password:outerHTML,#show:outerHTML" class="z-[2222] cursor-pointer size-4 absolute right-3 top-2" hx-trigger="click">
+			<img { srcAttrs("hide")... } alt="show/hide"/>
+		</div>
+	} else {
+		<input
+			{ hxAttrs("post",Toggle{Password:toggle.Password,ConfirmPass:"show"},true)... }
+			{ inputAttrs(false)... }
+			{ typeAttrs(toggle.Password)... }
+			name="password"
+			id="password"
+			hx-swap="multi:#swap2:outerHTML,#submit3:outerHTML"
+			value={ values.Password }
+			required
+			hx-indicator="#loading"
+			hx-sync="closest form:drop"
+		/>
+		<label for="password">Password</label>
+		<div id="show" { hxAttrs("toggle",Toggle{Password:toggle.Password,ConfirmPass:"show"},true)... } hx-swap="multi:#password:outerHTML,#show:outerHTML,#passwordConfirm:outerHTML,#showConfirm:outerHTML" class="z-[2222] cursor-pointer size-4 absolute right-3 top-2" hx-trigger="click">
+			<img { srcAttrs(toggle.Password)... } alt="show/hide"/>
+		</div>
+		<input
+			{ hxAttrs("post",Toggle{Password:toggle.Password,ConfirmPass:"show"},false)... }
+			{ inputAttrs(false)... }
+			{ typeAttrs("show")... }
+			name="passwordConfirm"
+			id="passwordConfirm"
+			hx-swap="multi:#swap2:outerHTML,#submit3:outerHTML"
+			value={ values.PasswordConfirm }
+			required
+			hx-indicator="#loading"
+			hx-sync="closest form:drop"
+		/>
+		<div id="showConfirm" { hxAttrs("toggle",Toggle{Password:toggle.Password,ConfirmPass:"show"},false)... } hx-swap="multi:#passwordConfirm:outerHTML,#showConfirm:outerHTML,#password:outerHTML,#show:outerHTML" class="z-[2222] cursor-pointer size-4 absolute right-3 top-2" hx-trigger="click">
+			<img { srcAttrs("show")... } alt="show/hide"/>
+		</div>
+	}
+}
+
+templ Page4Full(data RegisterPageData) {
+	@layouts.App() {
+		<div id="container" class="w-full justify-center">
+			<div class="mt-10 lg:mt-20">
+				<img
+					src="assets/favicon_light/android-chrome-512x512.png"
+					alt="Light Logo"
+					class="max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain"
+					x-show="theme === 'dark'"
+				/>
+				<img
+					src="assets/favicon_dark/android-chrome-512x512.png"
+					alt="Dark Logo"
+					class="max-w-sm mx-auto px-6 pb-1 md:pb-4 size-32 object-contain"
+					x-show="theme === 'light'"
+				/>
+				<div id="register-card" class="max-w-sm sm:max-w-lg mx-auto sm:border sm:rounded-md sm:shadow-sm py-12 px-6 flex flex-col gap-8">
+					<h2 class="text-center text-2xl font-medium">Signup</h2>
+					@Page4(&data.FormValues, data.FormErrors)
+				</div>
+			</div>
+		</div>
+	}
+}
+
+templ Page4(values *RegisterFormValues, errors v.Errors) {
+	<form
+		{ htmxAttrs("post",fmt.Sprintf("/signup?id=%s",values.Uuid))... }
+		class="slide-transition flex flex-col gap-4"
+		hx-target="#container"
+		hx-swap="outerHTML transition:true"
+		hx-indicator=".progress"
+		enctype="multipart/form-data"
+	>
+		<div class="w-40 h-40 mx-auto border-4 rounded-full shadow-md overflow-hidden items-center">
+			<div id="image-preview" class="w-full h-full rounded-full flex items-center justify-center text-center overflow-hidden">
+				<input
+					id="upload"
+					type="file"
+					name="profilePic"
+					class="hidden"
+					accept="image/*"
+					onchange="showImageModal(event)"
+				/>
+				<label
+					for="upload"
+					class="size-full flex items-center justify-center rounded-full cursor-pointer hover:opacity-50 transition-opacity duration-200"
+				>
+					<img id="profile-image" name="profile-image" class="w-full h-full object-cover" src="assets/icons/blank-user-profile.png" alt="Profile Image"/>
+				</label>
+			</div>
+		</div>
+		<div id="swap">
+			<div class="input-group flex flex-col gap-1">
+				<input
+					hx-post="/registration?check=username"
+					{ inputAttrs(errors.Has("username"))... }
+					name="username"
+					id="username"
+					hx-swap="multi:#swap:outerHTML,#submit4:outerHTML"
+					value={ values.Username }
+					autocomplete="username"
+					hx-indicator="#loading"
+					required
+					hx-sync="closest form:abort"
+				/>
+				<label
+					for="username"
+				>Username </label>
+				<div id="loading" class="htmx-indicator absolute right-3 top-2">
+					@components.Loading()
+				</div>
+			</div>
+			if errors.Has("username") {
+				<div class="text-red-500 text-xs">{ errors.Get("username")[0] }</div>
+			}
+		</div>
+		<input type="hidden" name="croppedImageData" id="croppedImageData" class=""/>
+		<button id="submit4" { buttonAttrs(true,"submit4")... }>
 			Signup
 		</button>
 	</form>
+	<div id="image-modal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-[2222] pointer-events-auto">
+		<div class="bg-white p-6 rounded-lg w-full max-w-md mx-auto relative flex justify-center items-center flex-col">
+			<button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 size-4">
+				<img src="assets/icons/close.png" alt=""/>
+			</button>
+			<h2 class="text-center text-xl text-primary-foreground font-semibold mb-4">Edit Profile Picture</h2>
+			<!-- Cropper Container with Circular Mask -->
+			<div id="crop-container" class="border-2 w-48 h-48 rounded-lg bg-white overflow-hidden">
+				<img id="crop-image" class="w-full h-full" src="" alt="Crop Image"/>
+			</div>
+			<div class="flex items-center justify-between my-4">
+				<label for="rotate-range" class="text-sm text-gray-600">Rotate:</label>
+				<input type="range" id="rotate-range" min="0" max="180" step="1" value="0" class="w-full ml-4" onchange="setRotate()"/>
+			</div>
+			<div class="flex justify-between">
+				<button id="save" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onclick="cropImage()">Save</button>
+			</div>
+		</div>
+	</div>
+	<script id="modal-js">
+		let cropper;
+		var croppable = false;
+		function getRoundedCanvas(sourceCanvas) {
+      var canvas = document.createElement('canvas');
+      var context = canvas.getContext('2d');
+      var width = sourceCanvas.width;
+      var height = sourceCanvas.height;
+
+      canvas.width = width;
+      canvas.height = height;
+      context.imageSmoothingEnabled = true;
+      context.drawImage(sourceCanvas, 0, 0, width, height);
+      context.globalCompositeOperation = 'destination-in';
+      context.beginPath();
+      context.arc(width / 2, height / 2, Math.min(width, height) / 2, 0, 2 * Math.PI, true);
+      context.fill();
+      return canvas;
+    }
+
+		function showImageModal(event) {
+				const file = event.target.files[0];
+				if (file) {
+						const reader = new FileReader();
+						reader.onload = function(e) {
+								const img = document.getElementById('crop-image');
+								img.src = e.target.result;
+								document.getElementById('image-modal').classList.remove('hidden');
+								
+								cropper = new Cropper(img, {
+										dragMode: 'move',
+										aspectRatio: 1,
+										viewMode: 1,
+										responsive: true,
+										restore: false,
+										guides: false,
+										center: false,
+										highlight: false,
+										cropBoxMovable: false,
+										cropBoxResizable: false,
+										toggleDragModeOnDblclick: false,
+										minContainerWidth:160,
+										minContainerHeight:160,
+										minCanvasWidth:160,
+										minCanvasHeight:160,
+										minCropBoxWidth:160,
+										minCropBoxHeight:160,
+										ready: function () {
+											croppable = true;
+										},
+								});
+						};
+						reader.readAsDataURL(file);
+				}
+		}
+
+		function setRotate() {
+			const rotateValue = document.getElementById('rotate-range').value;
+			cropper.rotateTo(rotateValue);
+		}
+		function closeModal() {
+    	const modal=document.getElementById('image-modal')
+			if (modal){
+				modal.classList.add('hidden');
+			}
+
+    	if (cropper) {
+        cropper.destroy();
+				cropper=null;
+    	}
+			document.getElementById('upload').value='';
+		}
+		var croppedImageURL
+
+
+		function cropImage() {
+    	if (cropper && croppable) {
+        const canvas = cropper.getCroppedCanvas({
+            width: 400,
+            height: 400,
+            imageSmoothingQuality: 'high'
+        });
+				roundedCanvas= getRoundedCanvas(canvas)
+        roundedCanvas.toBlob((blob) => {
+            const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
+
+						
+						// const formData = new FormData();
+            // formData.append('croppedImage', blob, 'cropped-image.jpg');
+
+						// Convert file to base64 string
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const base64data = reader.result.split(',')[1]; // Get base64 string without the prefix
+                document.getElementById('croppedImageData').value = base64data;
+						};
+						reader.readAsDataURL(file);
+                //console.log('Success:', result);
+						croppedImageURL = URL.createObjectURL(file);
+            document.getElementById('profile-image').src = croppedImageURL;
+						if (document.getElementById('username').value != ""){
+							document.getElementById('submit4').classList.remove("pointer-events-none")
+						}
+            closeModal(); // Close the modal after successful upload
+        }, 'image/jpeg');
+				//URL.revokeObjectURL(croppedImageURL);
+				closeModal();
+    	}
+		}
+	</script>
 }
 
-templ ConfirmEmail(email string) {
-	<div class="text-sm">An email confirmation link has been sent to: <span class="underline font-medium">{ email }</span></div>
+templ Username(values *RegisterFormValues, errors v.Errors) {
+	<div id="swap">
+		<div class="input-group flex flex-col gap-1">
+			<input
+				hx-post="/registration?check=username"
+				{ inputAttrs(errors.Has("username"))... }
+				name="username"
+				id="username"
+				hx-swap="multi:#swap:outerHTML,#submit4:outerHTML"
+				value={ values.Username }
+				autocomplete="username"
+				hx-indicator="#loading"
+				hx-sync="closest form:abort"
+			/>
+			<label
+				for="username"
+			>Username </label>
+			<div id="loading" class="htmx-indicator absolute right-3 top-2">
+				@components.Loading()
+			</div>
+		</div>
+		if errors.Has("username") {
+			<div class="text-red-500 text-xs">{ errors.Get("username")[0] }</div>
+		}
+	</div>
+	if errors.Has("username") || errors.Has("imageNotFound") {
+		<button id="submit4" { buttonAttrs(true,"submit4")... }>
+			Signup
+		</button>
+	} else {
+		<button id="submit4" { buttonAttrs(false,"submit4")... }>
+			Signup
+		</button>
+	}
+}
+
+templ Button(errors v.Errors) {
+	<button id="submit4" { buttonAttrs(errors.Has("imageNotFound"),"submit4")... }>
+		Signup
+	</button>
 }

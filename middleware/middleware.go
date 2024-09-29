@@ -3,11 +3,19 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
 type RequestURLKey struct{}
+
+func ServerDelay(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		time.Sleep(2000 * time.Millisecond)
+		return next(c)
+	}
+}
 
 func WithRequestURL(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {

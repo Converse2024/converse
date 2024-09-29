@@ -70,9 +70,9 @@ templ LoginForm(values LoginFormValues, errors validate.Errors) {
 				<div class="text-red-500 text-xs">{ errors.Get("verified")[0] }</div>
 			}
 		</div>
-		<button { buttonAttrs("")... }>
-			Login
-		</button>
+		// <button { buttonAttrs("")... }>
+		// 	Login
+		// </button>
 	</form>
 }
 
@@ -86,12 +86,10 @@ func labelAttrs(hasError bool) templ.Attributes {
 	}
 }
 
-func buttonAttrs(id string) templ.Attributes {
-	var class string
-	if id == "submit2" {
-		class = "pointer-events-none inline-flex text-primary-foreground items-center justify-center px-4 py-2 font-medium text-sm tracking-wide transition-colors duration-200 rounded-md bg-primary text-foreground hover:bg-primary/90 focus:ring focus:ring-primary focus:shadow-outline focus:outline-none"
-	} else {
-		class = "inline-flex text-primary-foreground items-center justify-center px-4 py-2 font-medium text-sm tracking-wide transition-colors duration-200 rounded-md bg-primary text-foreground hover:bg-primary/90 focus:ring focus:ring-primary focus:shadow-outline focus:outline-none"
+func buttonAttrs(hasError bool, id string) templ.Attributes {
+	class := "inline-flex text-primary-foreground items-center justify-center px-4 py-2 text-sm tracking-wide transition-colors duration-200 rounded-md bg-primary text-foreground hover:bg-primary/90 font-bold focus:ring focus:ring-primary focus:shadow-outline focus:outline-none"
+	if id == "submit2" || hasError {
+		class += " pointer-events-none"
 	}
 	return templ.Attributes{
 		"class": class,

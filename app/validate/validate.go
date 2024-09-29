@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strconv"
 	"unicode"
+
+	"github.com/google/uuid"
 )
 
 // Errors is a map holding all the possible errors that may
@@ -170,4 +172,9 @@ func parseRequest(r *http.Request, v any) error {
 
 	}
 	return nil
+}
+
+func IsValidUUID(id string) bool {
+	_, err := uuid.Parse(id)
+	return err == nil
 }
